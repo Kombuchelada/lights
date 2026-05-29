@@ -25,6 +25,12 @@ export class ClientConnection {
   private readonly conn: HubConnection;
   private code = '';
 
+  /** Echo-back throttle: don't ack faster than this (the controller only needs the latest). */
+  private readonly ackIntervalMs = 100;
+  private lastAck = 0;
+  private pendingAckTs = 0;
+  private ackTimer?: ReturnType<typeof setTimeout>;
+
   constructor(apiBase: string, private readonly handlers: ClientHandlers) {
     this.conn = new HubConnectionBuilder()
       .withUrl(`${apiBase}${CONTROL_HUB_PATH}`)
@@ -58,5 +64,31 @@ export class ClientConnection {
     if (this.code) {
       await this.conn.invoke(HubMethods.joinSession, this.code, 'client');
     }
+  }
+
+  /**
+   * Confirm to the controller (via the server) that we rendered the state
+   * stamped `ts` — echo-back delivery confirmation. Throttled with a trailing
+   * edge so the controller always learns about the most recent frame without
+   * one ack per state at the controller's ~20 msg/s.
+   */
+  ackRendered(ts?: number): void {
+    if (!ts) return;
+    this.pendingAckTs = ts;
+    const elapsed = Date.now() - this.lastAck;
+    if (elapsed >= this.ackIntervalMs) {
+      this.flushAck();
+      return;
+    }
+    clearTimeout(this.ackTimer);
+    this.ackTimer = setTimeout(() => this.flushAck(), this.ackIntervalMs - elapsed);
+  }
+
+  private flushAck(): void {
+    if (this.conn.state !== HubConnectionState.Connected || !this.pendingAckTs) return;
+    this.lastAck = Date.now();
+    const ts = this.pendingAckTs;
+    this.pendingAckTs = 0;
+    void this.conn.invoke(HubMethods.ackState, ts).catch(() => undefined);
   }
 }

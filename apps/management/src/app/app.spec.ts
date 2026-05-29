@@ -104,4 +104,70 @@ describe('App', () => {
     expect(app.isCellOn('right', 6)).toBe(true);
     expect(app.isCellOn('left', 6)).toBe(true); // mirrored to the left eye
   });
+
+  it('fine-steps a channel by ±1, honoring the channel lock', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      setPreset(rgb: { r: number; g: number; b: number }): void;
+      setLock(l: string): void;
+      stepChannel(c: string, d: number): void;
+      control: { state(): { color: { r: number; g: number; b: number } } };
+    };
+    app.setPreset({ r: 100, g: 50, b: 10 });
+    app.stepChannel('r', 1);
+    expect(app.control.state().color.r).toBe(101);
+
+    app.setLock('rg');
+    app.stepChannel('r', -1); // both R and G move with the lock
+    const color = app.control.state().color;
+    expect(color.r).toBe(100);
+    expect(color.g).toBe(100);
+    expect(color.b).toBe(10); // blue unlocked
+  });
+
+  it('stashes and recalls colors in round-robin memory slots', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      setPreset(rgb: { r: number; g: number; b: number }): void;
+      saveColor(): void;
+      recallSlot(i: number): void;
+      memory(): readonly ({ r: number; g: number; b: number } | null)[];
+      control: { state(): { color: { r: number; g: number; b: number } } };
+    };
+    app.setPreset({ r: 10, g: 20, b: 30 });
+    app.saveColor(); // → slot 0
+    app.setPreset({ r: 200, g: 0, b: 0 });
+    expect(app.memory()[0]).toEqual({ r: 10, g: 20, b: 30 });
+    expect(app.memory()[1]).toBeNull();
+
+    app.recallSlot(0); // restores the stashed color
+    expect(app.control.state().color).toEqual({ r: 10, g: 20, b: 30 });
+
+    app.recallSlot(1); // empty slot is a no-op
+    expect(app.control.state().color).toEqual({ r: 10, g: 20, b: 30 });
+  });
+
+  it('drives the KITT sweep and stops it without losing axis/range', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance as unknown as {
+      onSweepHz(v: string): void;
+      setSweepAxis(a: 'x' | 'y'): void;
+      onSweepRange(v: string): void;
+      stopSweep(): void;
+      sweeping(): boolean;
+      sweepAxis(): 'x' | 'y';
+      sweepRangePct(): number;
+    };
+    app.onSweepHz('2');
+    app.setSweepAxis('y');
+    app.onSweepRange('40');
+    expect(app.sweeping()).toBe(true);
+    expect(app.sweepAxis()).toBe('y');
+    expect(app.sweepRangePct()).toBe(40);
+
+    app.stopSweep(); // rate → 0, but axis/range persist for a quick restart
+    expect(app.sweeping()).toBe(false);
+    expect(app.sweepAxis()).toBe('y');
+    expect(app.sweepRangePct()).toBe(40);
+  });
 });

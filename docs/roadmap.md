@@ -86,28 +86,35 @@ headset run of the dual-pane render (per `docs/testing.md`).
 
 ---
 
-## Phase 3 — Controller ergonomics 💤
+## Phase 3 — Controller ergonomics ✅
 
 Smaller quality-of-life features that aren't captured by Phase 2 (stimulus
-depth) or the SaaS roadmap. None require a protocol bump except where noted —
-most are controller-only UI.
+depth) or the SaaS roadmap. All controller-only UI except the `KITT` sweep
+(an additive optional `sweep` field, still `v = 2`) and echo-back (additive
+hub method/event, no version change).
 
-- 💤 **In-session color memory slots** — quick stash/recall of up to ~4 colors
-  mid-session (`SAVE`, `M1–M4`). Distinct from the SaaS "saved protocols":
-  ephemeral, controller-local, zero-friction recall.
-- 💤 **Fuller preset palette** — we have 8 swatches today. Missing the
-  clinically useful **Far Red** (`100,0,0`) and **Black** (`0,0,0`), plus
-  Magenta, Indigo, Yellow-Green, and Red-Orange.
-- 💤 **Per-channel fine-step `± / «»` buttons** — ±1 nudge on each RGB channel
-  (and ±1 nm on wavelength) for precise adjustment, honoring the active channel
-  lock. Complements the existing sliders / numeric inputs.
-- 💤 **Echo-back delivery confirmation** — surface the state the client actually
-  rendered (server round-trip echo), rather than only the controller's locally
-  predicted preview. Confirms the message reached the headset.
-- 💤 **`KITT` scanning mode** — an oscillating/sweeping light stimulus. Named for
-  the Knight Rider sweeping scanner; a mode that animates the circle's X
-  position back and forth. Would need a protocol addition (sweep params) and
-  client-side animation.
+- ✅ **In-session color memory slots** — quick stash/recall of four colors
+  mid-session (**Save** + `M1–M4`). Ephemeral and controller-local (a signal,
+  cleared on reload), round-robin save; distinct from the SaaS "saved protocols".
+- ✅ **Fuller preset palette** — 14 swatches: added the clinically useful
+  **Far Red** (`100,0,0`) and **Black** (`0,0,0`), plus **Red-Orange**,
+  **Yellow-Green**, **Indigo**, and **Magenta**.
+- ✅ **Per-channel fine-step `±` buttons** — ±1 nudge on each RGB channel and
+  ±1 nm on wavelength, flanking each slider and honoring the active channel lock.
+- ✅ **Echo-back delivery confirmation** — the client `AckState(ts)`s each
+  rendered frame (throttled, latest-wins); the server relays it to the
+  controller as `StateRendered`, which shows **✓ Rendered on headset** plus the
+  round-trip latency. Confirms the message reached the headset, not just the
+  controller's local preview.
+- ✅ **`KITT` scanning sweep** — an oscillating light. Additive optional `sweep`
+  field (`{ hz, axis: x|y, range }`); the client animates the position
+  sinusoidally with `requestAnimationFrame` (movement, not a flash, so it honours
+  `prefers-reduced-motion` rather than the photosensitivity gate). Works in mono
+  and stereo.
+
+Verified: server **27/27** (sweep sanitize + v1/v2 back-compat), management
+**10/10** (memory round-robin, locked fine-step, sweep), all builds clean. Open:
+physical headset run of the sweep.
 
 ---
 

@@ -34,6 +34,7 @@ origins before any non-local deployment.
 |---|---|---|
 | `JoinSession` | `code: string, role: "controller" \| "client"` | Joins the SignalR group `session:{sessionId}`. Codes are matched case-insensitively. |
 | `SendState`   | `state: LightState` | Controller only. Server validates/clamps, stores as last state, relays to the *other* members of the group (`OthersInGroup`). |
+| `AckState`    | `ts: number` | Client only (echo-back). Confirms the client rendered the state stamped `ts`; the server relays it to the controller as `StateRendered`. Throttled client-side (latest-wins). |
 | `LeaveSession`| — | Optional; disconnect is handled automatically. |
 
 ### Hub events (server → client)
@@ -41,6 +42,7 @@ origins before any non-local deployment.
 | Event | Args | Sent to |
 |---|---|---|
 | `ReceiveState` | `state: LightState` | Client(s); also the just-joined client for initial sync. |
+| `StateRendered` | `info: { ts: number }` | Controller (echo-back). The client rendered the state stamped `ts`; the controller shows delivery + round-trip latency. |
 | `ClientJoined` | `info: { connectionId: string }` | Controller (trigger a fresh snapshot). |
 | `ClientLeft` | — | Controller. |
 | `ControllerJoined` | — | Client. |
@@ -66,7 +68,10 @@ origins before any non-local deployment.
   "right": { "positions": 1, "rotationDeg": 0 },
   "aperture": 0.12,                        // per-dot size (stereo), 0..1
   "eyeDistance": 0.1,                       // pane interpupillary offset, -1..1
-  "background": { "color": { "r": 0, "g": 0, "b": 80 }, "hz": 0 } // A/B background
+  "background": { "color": { "r": 0, "g": 0, "b": 80 }, "hz": 0 }, // A/B background
+
+  // ---- Phase 3 — additive optional; absent ⇒ no sweep ----
+  "sweep": { "hz": 0, "axis": "x", "range": 0.3 } // KITT oscillating sweep
 }
 ```
 
@@ -86,6 +91,7 @@ origins before any non-local deployment.
 | `aperture` | number? | `0..1` | Per-dot size in stereo, fraction of half the shorter pane side. |
 | `eyeDistance` | number? | `-1..1` | Horizontal offset of the two panes (interpupillary); `+` diverges. |
 | `background` | object? | see below | A/B alternating background. |
+| `sweep` | object? | see below | `KITT` oscillating sweep of the light position. |
 
 ### v2 — stimulus depth (Phase 2)
 
@@ -124,6 +130,36 @@ dot of size `aperture` at each lit cell, on a ring of `shape.radius`, offset by
   `hz > 0` is gated behind the **same photosensitivity consent** as flicker
   (clamped to `60`, `prefers-reduced-motion` respected).
 
+### Phase 3 — `sweep` + echo-back
+
+The `sweep` field and the echo-back round-trip are **additive** Phase-3
+extensions. `sweep` is one more optional `LightState` field (a missing field ⇒
+no sweep), so the schema version stays **`v = 2`**; echo-back adds a hub
+method/event pair, which needs no version change.
+
+**`sweep` (`Sweep`)** — the `KITT` oscillating scan:
+
+```jsonc
+{ "hz": 0, "axis": "x", "range": 0.3 }
+```
+
+- `hz` — oscillations per second, `0..5` (slow scanner motion, not a strobe);
+  `0` = off (the light holds at its `shape` position).
+- `axis` — `"x"` (default) or `"y"`: which position axis oscillates.
+- `range` — `0..1`, peak offset from the base position.
+
+The client animates it locally with `requestAnimationFrame` — the center moves
+sinusoidally around `shape.{x,y}` by `±range` on `axis`, clamped to `0..1`. It
+applies in **mono and stereo**. Because it is *movement* (not a flash) it is
+**not** behind the photosensitivity gate, but the client pauses it for viewers
+who prefer reduced motion (`prefers-reduced-motion`).
+
+**Echo-back** — after rendering each frame the client invokes `AckState(ts)`
+(throttled, latest-wins) with the state's `ts`; the server relays it to the
+controller as `StateRendered { ts }`. The controller surfaces **delivery**
+(rendered vs. pending) and the **round-trip latency** (`now − ts`, one clock),
+confirming the frame actually reached the headset.
+
 ### Validation & clamping
 
 The server is authoritative: every field is clamped to `LIMITS` before being
@@ -161,4 +197,7 @@ case-insensitive on join, 1-hour TTL (in-memory for the prototype).
 `v` is the schema version. Additive fields keep the door open: every v2 field is
 optional, so v1 and v2 states interoperate (a missing field ⇒ its default). The
 current version is **`2`** — the Phase-2 stimulus superset (per-eye targeting,
-stereo render mode, rotation, aperture, eye-distance, A/B background).
+stereo render mode, rotation, aperture, eye-distance, A/B background). The
+Phase-3 `sweep` field is also additive and optional, so it joins the v2 superset
+without a version bump; echo-back is a hub method/event pair and is likewise
+unversioned.

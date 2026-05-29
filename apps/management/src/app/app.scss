@@ -284,6 +284,96 @@ button.link {
   padding: 0;
 }
 
+/* In-session color memory slots */
+.memory {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.memory .save {
+  margin-left: 0;
+  white-space: nowrap;
+}
+
+.swatch.slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+.swatch.slot.empty {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--panel),
+    var(--panel) 5px,
+    var(--border) 5px,
+    var(--border) 6px
+  );
+  color: var(--muted);
+  text-shadow: none;
+  cursor: default;
+}
+
+/* Slider with flanking ±1 fine-step buttons */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slider-row input[type="range"] {
+  flex: 1 1 auto;
+}
+
+.step-btn {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.step-btn:hover {
+  border-color: var(--accent);
+}
+
+/* Echo-back render confirmation */
+.echo {
+  font-size: 0.8rem;
+  color: var(--muted);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.echo.on {
+  color: var(--ok);
+}
+
+.echo em {
+  color: var(--muted);
+  font-style: normal;
+  font-size: 0.75rem;
+}
+
+.badge-sweep {
+  right: auto;
+  left: 10px;
+}
+
 .row {
   display: flex;
   align-items: center;

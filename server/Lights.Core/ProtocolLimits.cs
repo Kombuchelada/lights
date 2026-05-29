@@ -36,6 +36,14 @@ public static class ProtocolLimits
     public const double AbHzMin = 0.0;
     public const double AbHzMax = 60.0;
 
+    /// <summary>KITT sweep oscillation rate — slow scanner motion, not a strobe.</summary>
+    public const double SweepHzMin = 0.0;
+    public const double SweepHzMax = 5.0;
+
+    /// <summary>KITT sweep amplitude, normalised fraction of the viewport.</summary>
+    public const double SweepRangeMin = 0.0;
+    public const double SweepRangeMax = 1.0;
+
     private static readonly string[] RenderModes = { "mono", "vergence", "align", "paired", "manual" };
 
     /// <summary>
@@ -81,6 +89,16 @@ public static class ProtocolLimits
         };
     }
 
+    private static Sweep? SanitizeSweep(Sweep? s) =>
+        s is null
+            ? null
+            : new Sweep
+            {
+                Hz = Clamp(s.Hz, SweepHzMin, SweepHzMax),
+                Axis = s.Axis == "y" ? "y" : "x",
+                Range = Clamp(s.Range, SweepRangeMin, SweepRangeMax),
+            };
+
     /// <summary>Clamp/normalise an incoming state so renderers can trust it.</summary>
     public static LightState Sanitize(LightState? input)
     {
@@ -118,6 +136,7 @@ public static class ProtocolLimits
                 ? null
                 : Clamp(s.EyeDistance.Value, EyeDistanceMin, EyeDistanceMax),
             Background = SanitizeBackground(s.Background),
+            Sweep = SanitizeSweep(s.Sweep),
         };
     }
 }

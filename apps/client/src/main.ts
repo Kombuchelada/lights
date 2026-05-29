@@ -66,6 +66,7 @@ const connection = new ClientConnection(apiBase, {
   onState: (state) => {
     renderer.setState(state);
     maybePromptConsent(state);
+    connection.ackRendered(state.ts); // echo-back: confirm the frame reached the headset
   },
   onStatus: (status, detail) => {
     connStatus = status;

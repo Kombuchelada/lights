@@ -19,11 +19,17 @@ import {
  *    dot size, eye-distance = pane offset, and per-eye rotation of the pattern).
  *  - **A/B background** alternates the backdrop between black and a second color;
  *    like flicker, any alternation is gated behind the photosensitivity consent.
+ *  - **KITT sweep** oscillates the light's position back and forth (movement, not
+ *    a flash), animated locally and paused when the viewer prefers reduced motion.
  */
 export class Renderer {
   private readonly ctx: CanvasRenderingContext2D;
   private state: LightState = sanitizeLightState(defaultLightState());
   private flickerConsented = false;
+
+  /** Honour the OS "reduce motion" setting by holding the sweep still. */
+  private reducedMotion =
+    typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   private dirty = true;
   private visible = true;
@@ -85,6 +91,9 @@ export class Renderer {
     const alternatingBg = consent && abHz > 0;
     let changed = this.dirty;
 
+    // KITT sweep is continuous motion: redraw every frame while it runs.
+    if (this.sweeping()) changed = true;
+
     // Light on/off flicker.
     if (flickering) {
       const halfPeriodMs = 1000 / (s.flickerHz * 2);
@@ -128,6 +137,27 @@ export class Renderer {
     return `rgb(${bg.color.r}, ${bg.color.g}, ${bg.color.b})`;
   }
 
+  /** Whether the KITT sweep is currently animating (on, and motion is allowed). */
+  private sweeping(): boolean {
+    return !this.reducedMotion && (this.state.sweep?.hz ?? 0) > 0;
+  }
+
+  /**
+   * The light's effective normalised center, factoring the KITT sweep. The sweep
+   * oscillates one axis sinusoidally around the base `shape` position; with the
+   * sweep off (or reduced motion) this is just the base position.
+   */
+  private sweptCenter(): { x: number; y: number } {
+    const s = this.state;
+    let { x, y } = s.shape;
+    if (this.sweeping() && s.sweep) {
+      const offset = s.sweep.range * Math.sin((performance.now() / 1000) * s.sweep.hz * 2 * Math.PI);
+      if (s.sweep.axis === 'y') y = Math.min(1, Math.max(0, y + offset));
+      else x = Math.min(1, Math.max(0, x + offset));
+    }
+    return { x, y };
+  }
+
   private draw(): void {
     const { ctx, canvas } = this;
     const s = this.state;
@@ -140,16 +170,18 @@ export class Renderer {
 
     if (!this.visible || s.brightness <= 0) return;
 
+    const center = this.sweptCenter();
+
     if ((s.mode ?? 'mono') === 'mono') {
       const radiusPx = s.shape.radius * (Math.min(w, h) / 2);
-      this.drawDot(s.shape.x * w, s.shape.y * h, radiusPx);
+      this.drawDot(center.x * w, center.y * h, radiusPx);
     } else {
-      this.drawStereo(w, h);
+      this.drawStereo(w, h, center);
     }
   }
 
   /** Dual-pane render: left/right halves, each showing its eye's lit grid dots. */
-  private drawStereo(w: number, h: number): void {
+  private drawStereo(w: number, h: number, center: { x: number; y: number }): void {
     const s = this.state;
     const paneW = w / 2;
     const shorter = Math.min(paneW, h);
@@ -158,8 +190,8 @@ export class Renderer {
     if (dotR <= 0) return;
 
     const edist = (s.eyeDistance ?? 0) * (paneW / 2);
-    const offX = (s.shape.x - 0.5) * paneW;
-    const offY = (s.shape.y - 0.5) * h;
+    const offX = (center.x - 0.5) * paneW;
+    const offY = (center.y - 0.5) * h;
     const cy = h / 2 + offY;
 
     // Left pane shifts left, right pane right (positive eye-distance = divergence).

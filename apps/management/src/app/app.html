@@ -46,6 +46,12 @@
         <span class="client" role="status" aria-live="polite" [class.on]="control.clientConnected()">
           {{ control.clientConnected() ? '● Client connected' : '○ Waiting for client…' }}
         </span>
+        @if (control.clientConnected() && hasRenderConfirmation()) {
+          <span class="echo" role="status" aria-live="polite" [class.on]="rendered()">
+            {{ rendered() ? '✓ Rendered on headset' : '… sending to headset' }}
+            <em>{{ roundTripMs() }} ms round-trip</em>
+          </span>
+        }
       </div>
     </section>
 
@@ -93,6 +99,9 @@
       @if (flickerHz() > 0) {
         <span class="badge">⚡ {{ flickerHz() }} Hz</span>
       }
+      @if (sweeping()) {
+        <span class="badge badge-sweep">↔ {{ sweepHz() }} Hz</span>
+      }
     </div>
 
     <div class="stack">
@@ -118,42 +127,75 @@
           />
         </div>
 
-        <label class="field">
+        <div class="memory">
+          <button type="button" class="link save" (click)="saveColor()" title="Stash the current color">
+            ⊕ Save
+          </button>
+          @for (slot of memory(); track $index) {
+            <button
+              type="button"
+              class="swatch slot"
+              [class.empty]="!slot"
+              [disabled]="!slot"
+              [style.background]="slot ? 'rgb(' + slot.r + ',' + slot.g + ',' + slot.b + ')' : ''"
+              [attr.aria-label]="slot ? ('Recall memory ' + ($index + 1)) : ('Memory ' + ($index + 1) + ' empty')"
+              [title]="'M' + ($index + 1)"
+              (click)="recallSlot($index)"
+            >
+              <span aria-hidden="true">M{{ $index + 1 }}</span>
+            </button>
+          }
+          <span class="hint">Save stashes the current color; M1–M4 recall it. Cleared when you reload.</span>
+        </div>
+
+        <div class="field">
           <span class="label">Red <em>{{ color().r }}</em></span>
-          <input
-            class="chan-r"
-            type="range"
-            min="0"
-            max="255"
-            [value]="color().r"
-            (input)="onChannel('r', $any($event.target).value)"
-            aria-label="Red channel (0–255)"
-          />
-        </label>
-        <label class="field">
+          <div class="slider-row">
+            <button type="button" class="step-btn" (click)="stepChannel('r', -1)" aria-label="Decrease red by 1">−</button>
+            <input
+              class="chan-r"
+              type="range"
+              min="0"
+              max="255"
+              [value]="color().r"
+              (input)="onChannel('r', $any($event.target).value)"
+              aria-label="Red channel (0–255)"
+            />
+            <button type="button" class="step-btn" (click)="stepChannel('r', 1)" aria-label="Increase red by 1">+</button>
+          </div>
+        </div>
+        <div class="field">
           <span class="label">Green <em>{{ color().g }}</em></span>
-          <input
-            class="chan-g"
-            type="range"
-            min="0"
-            max="255"
-            [value]="color().g"
-            (input)="onChannel('g', $any($event.target).value)"
-            aria-label="Green channel (0–255)"
-          />
-        </label>
-        <label class="field">
+          <div class="slider-row">
+            <button type="button" class="step-btn" (click)="stepChannel('g', -1)" aria-label="Decrease green by 1">−</button>
+            <input
+              class="chan-g"
+              type="range"
+              min="0"
+              max="255"
+              [value]="color().g"
+              (input)="onChannel('g', $any($event.target).value)"
+              aria-label="Green channel (0–255)"
+            />
+            <button type="button" class="step-btn" (click)="stepChannel('g', 1)" aria-label="Increase green by 1">+</button>
+          </div>
+        </div>
+        <div class="field">
           <span class="label">Blue <em>{{ color().b }}</em></span>
-          <input
-            class="chan-b"
-            type="range"
-            min="0"
-            max="255"
-            [value]="color().b"
-            (input)="onChannel('b', $any($event.target).value)"
-            aria-label="Blue channel (0–255)"
-          />
-        </label>
+          <div class="slider-row">
+            <button type="button" class="step-btn" (click)="stepChannel('b', -1)" aria-label="Decrease blue by 1">−</button>
+            <input
+              class="chan-b"
+              type="range"
+              min="0"
+              max="255"
+              [value]="color().b"
+              (input)="onChannel('b', $any($event.target).value)"
+              aria-label="Blue channel (0–255)"
+            />
+            <button type="button" class="step-btn" (click)="stepChannel('b', 1)" aria-label="Increase blue by 1">+</button>
+          </div>
+        </div>
 
         <div class="field">
           <span class="label">Channel lock</span>
@@ -179,15 +221,19 @@
             Wavelength <em>{{ wavelength() }} nm</em>
             @if (usingWavelength()) { <span class="tag">spectral</span> }
           </span>
-          <input
-            class="spectrum"
-            type="range"
-            [min]="limits.wavelengthNm.min"
-            [max]="limits.wavelengthNm.max"
-            [value]="wavelength()"
-            (input)="onWavelength($any($event.target).value)"
-            aria-label="Wavelength in nanometers"
-          />
+          <div class="slider-row">
+            <button type="button" class="step-btn" (click)="stepWavelength(-1)" aria-label="Decrease wavelength by 1 nanometer">−</button>
+            <input
+              class="spectrum"
+              type="range"
+              [min]="limits.wavelengthNm.min"
+              [max]="limits.wavelengthNm.max"
+              [value]="wavelength()"
+              (input)="onWavelength($any($event.target).value)"
+              aria-label="Wavelength in nanometers"
+            />
+            <button type="button" class="step-btn" (click)="stepWavelength(1)" aria-label="Increase wavelength by 1 nanometer">+</button>
+          </div>
           <span class="hint">
             Sets the color spectrally ({{ limits.wavelengthNm.min }}–{{ limits.wavelengthNm.max }} nm).
             Editing RGB switches back to manual color.
@@ -460,6 +506,60 @@
             </p>
           }
         </div>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <h2 style="margin: 0">Sweep (KITT)</h2>
+          @if (sweeping()) {
+            <button type="button" class="link" (click)="stopSweep()">Stop</button>
+          }
+        </div>
+        <label class="field">
+          <span class="label">Rate <em>{{ sweepHz() }} Hz</em></span>
+          <input
+            type="range"
+            [min]="limits.sweepHz.min"
+            [max]="limits.sweepHz.max"
+            step="0.1"
+            [value]="sweepHz()"
+            (input)="onSweepHz($any($event.target).value)"
+            aria-label="Sweep oscillation rate in hertz"
+          />
+          <span class="hint">
+            Oscillates the light back and forth, scanner-style. 0 Hz = off. The client animates it
+            locally and pauses for viewers who prefer reduced motion.
+          </span>
+        </label>
+        <div class="field">
+          <span class="label">Axis</span>
+          <div class="seg" role="radiogroup" aria-label="Sweep axis">
+            @for (opt of axisOptions; track opt.value) {
+              <button
+                type="button"
+                class="seg-btn"
+                role="radio"
+                [class.on]="sweepAxis() === opt.value"
+                [attr.aria-checked]="sweepAxis() === opt.value"
+                (click)="setSweepAxis(opt.value)"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+        <label class="field">
+          <span class="label">Range <em>{{ sweepRangePct() }}%</em></span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            [value]="sweepRangePct()"
+            (input)="onSweepRange($any($event.target).value)"
+            aria-label="Sweep amplitude percent"
+          />
+          <span class="hint">How far the light travels from its base position.</span>
+        </label>
       </section>
     </div>
   }

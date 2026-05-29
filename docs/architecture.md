@@ -138,3 +138,7 @@ This is **not** a medical device and makes no clinical claims.
   stereoscopic VR (`vergence`/`align`/`paired`/`manual`), per-eye rotation,
   aperture, eye-distance, and A/B alternating background — shipped as the additive
   `v = 2` superset plus the stereo client render mode. See `roadmap.md`.
+- **Phase-3 controller ergonomics (done):** in-session color memory slots, a
+  fuller preset palette, per-channel ±1 fine-step, echo-back delivery confirmation
+  (`AckState`/`StateRendered` round-trip), and the `KITT` oscillating sweep (an
+  additive optional `sweep` field, animated client-side). See `roadmap.md`.

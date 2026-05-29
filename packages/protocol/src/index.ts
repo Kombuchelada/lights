@@ -82,6 +82,26 @@ export interface AbBackground {
   hz: number;
 }
 
+/** Axis the `KITT` sweep oscillates along. */
+export type SweepAxis = 'x' | 'y';
+
+/**
+ * `KITT` scanning sweep — an oscillating light. `hz === 0` is off (the light
+ * stays at its `shape` position); `hz > 0` oscillates the light center back and
+ * forth along `axis` with amplitude `range` (normalised). Like flicker, the
+ * motion is animated locally on the client from this state — we never send one
+ * message per frame. It is *movement*, not a flash, so it is not behind the
+ * photosensitivity gate, but the client honours `prefers-reduced-motion`.
+ */
+export interface Sweep {
+  /** Oscillations per second; `0` = off (steady position). */
+  hz: number;
+  /** Which position axis sweeps. */
+  axis: SweepAxis;
+  /** Peak offset from the base position, 0..1 of the viewport. */
+  range: number;
+}
+
 /** The complete, renderable light state — the unit of realtime sync. */
 export interface LightState {
   /** Schema version; equals {@link PROTOCOL_VERSION}. */
@@ -115,6 +135,8 @@ export interface LightState {
   eyeDistance?: number;
   /** A/B alternating background. */
   background?: AbBackground;
+  /** `KITT` oscillating sweep of the light position. */
+  sweep?: Sweep;
 }
 
 /* ------------------------------------------------------------------ *
@@ -139,6 +161,10 @@ export const LIMITS = {
   eyePositions: { min: 0, max: 0x1fff },
   /** A/B background alternation rate; same ceiling + consent gate as flicker. */
   abHz: { min: 0, max: 60 },
+  /** `KITT` sweep oscillation rate — slow scanner motion, not a strobe. */
+  sweepHz: { min: 0, max: 5 },
+  /** `KITT` sweep amplitude, normalised fraction of the viewport. */
+  sweepRange: { min: 0, max: 1 },
 } as const;
 
 /** Frequencies in this band carry the highest photosensitive-seizure risk. */
@@ -198,6 +224,8 @@ export const HubMethods = {
   joinSession: 'JoinSession',
   sendState: 'SendState',
   leaveSession: 'LeaveSession',
+  /** Client → server: confirm the client rendered the state stamped `ts`. */
+  ackState: 'AckState',
 } as const;
 
 /** Hub event names (server → client pushes). */
@@ -208,7 +236,15 @@ export const HubEvents = {
   controllerJoined: 'ControllerJoined',
   controllerLeft: 'ControllerLeft',
   sessionEnded: 'SessionEnded',
+  /** Server → controller: the client rendered the state stamped `ts` (echo-back). */
+  stateRendered: 'StateRendered',
 } as const;
+
+/** Payload of the {@link HubEvents.stateRendered} echo-back event. */
+export interface StateRendered {
+  /** The `ts` of the state the client rendered (controller's send clock). */
+  ts: number;
+}
 
 /** Response from `POST /api/sessions`. */
 export interface CreateSessionResponse {
@@ -246,6 +282,15 @@ const sanitizeBackground = (b: Partial<AbBackground> | undefined): AbBackground 
   return {
     color: { r: clampChannel(c.r), g: clampChannel(c.g), b: clampChannel(c.b) },
     hz: clamp(b.hz ?? 0, LIMITS.abHz.min, LIMITS.abHz.max),
+  };
+};
+
+const sanitizeSweep = (s: Partial<Sweep> | undefined): Sweep | undefined => {
+  if (!s) return undefined;
+  return {
+    hz: clamp(s.hz ?? 0, LIMITS.sweepHz.min, LIMITS.sweepHz.max),
+    axis: s.axis === 'y' ? 'y' : 'x',
+    range: clamp(s.range ?? 0, LIMITS.sweepRange.min, LIMITS.sweepRange.max),
   };
 };
 
@@ -301,6 +346,7 @@ export function sanitizeLightState(input: Partial<LightState> | undefined): Ligh
         ? undefined
         : clamp(s.eyeDistance, LIMITS.eyeDistance.min, LIMITS.eyeDistance.max),
     background: sanitizeBackground(s.background),
+    sweep: sanitizeSweep(s.sweep),
   };
 }
 

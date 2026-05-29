@@ -13,6 +13,7 @@ import {
   sanitizeLightState,
   type CreateSessionResponse,
   type LightState,
+  type StateRendered,
 } from '@lights/protocol';
 
 export type ConnStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
@@ -37,6 +38,12 @@ export class ControlService {
   readonly clientConnected = signal(false);
   readonly session = signal<CreateSessionResponse | null>(null);
   readonly state = signal<LightState>(defaultLightState());
+
+  /** Echo-back: `ts` of the last state we sent, and the last one the client confirmed rendering. */
+  readonly lastSentTs = signal(0);
+  readonly lastRenderedTs = signal(0);
+  /** Round-trip time (ms) of the last confirmed frame: controller → server → client → back. */
+  readonly roundTripMs = signal(0);
 
   async startSession(): Promise<void> {
     this.status.set('connecting');
@@ -71,7 +78,18 @@ export class ControlService {
       this.clientConnected.set(true);
       void this.pushState(); // resync the freshly joined client
     });
-    conn.on(HubEvents.clientLeft, () => this.clientConnected.set(false));
+    conn.on(HubEvents.clientLeft, () => {
+      this.clientConnected.set(false);
+      this.lastRenderedTs.set(0); // no headset to confirm renders anymore
+    });
+
+    // Echo-back: the client confirms it rendered a frame (round-trip latency).
+    conn.on(HubEvents.stateRendered, (payload: StateRendered) => {
+      const ts = payload?.ts ?? 0;
+      if (ts <= this.lastRenderedTs()) return; // ignore stale/out-of-order acks
+      this.lastRenderedTs.set(ts);
+      this.roundTripMs.set(Math.max(0, Date.now() - ts));
+    });
 
     conn.onreconnecting(() => this.status.set('reconnecting'));
     conn.onreconnected(async () => {
@@ -102,8 +120,10 @@ export class ControlService {
 
   private async pushState(): Promise<void> {
     if (this.conn?.state !== HubConnectionState.Connected) return;
+    const ts = Date.now();
+    this.lastSentTs.set(ts);
     try {
-      await this.conn.invoke(HubMethods.sendState, { ...this.state(), ts: Date.now() });
+      await this.conn.invoke(HubMethods.sendState, { ...this.state(), ts });
     } catch {
       /* transient send failures are recovered by the next update */
     }

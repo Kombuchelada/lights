@@ -85,6 +85,26 @@ public sealed class ControlHub : Hub
         await Clients.OthersInGroup(GroupName(sessionId)).SendAsync("ReceiveState", clean);
     }
 
+    /// <summary>
+    /// Client → controller echo-back. The client calls this after rendering a
+    /// state, passing back its <c>ts</c>; we relay it to the controller as
+    /// <c>StateRendered</c> so the controller can confirm the headset rendered
+    /// the frame (and measure round-trip latency).
+    /// </summary>
+    public async Task AckState(long ts)
+    {
+        if (!Context.Items.TryGetValue(SessionIdKey, out var sidObj) || sidObj is not string sessionId)
+        {
+            return; // not joined — nothing to confirm
+        }
+
+        var session = _store.Get(sessionId);
+        if (session?.ControllerConnectionId is { } controllerId)
+        {
+            await Clients.Client(controllerId).SendAsync("StateRendered", new { ts });
+        }
+    }
+
     public Task LeaveSession() => OnDisconnectedAsync(null);
 
     public override async Task OnDisconnectedAsync(Exception? exception)

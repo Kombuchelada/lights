@@ -11,12 +11,16 @@ import {
   wavelengthToRgb,
   type Rgb,
   type RenderMode,
+  type SweepAxis,
   type LightState,
 } from '@lights/protocol';
 
 type Channel = 'r' | 'g' | 'b';
 type Lock = 'none' | 'rg' | 'rb' | 'gb' | 'rgb';
 type Eye = 'left' | 'right';
+
+/** Number of in-session color memory slots (M1–M4). */
+const MEMORY_SLOTS = 4;
 
 interface Preset {
   label: string;
@@ -108,15 +112,30 @@ export class App {
   protected readonly riskBand = FLICKER_HIGH_RISK_BAND_HZ;
 
   protected readonly presets: readonly Preset[] = [
+    { label: 'Far Red', rgb: { r: 100, g: 0, b: 0 } },
     { label: 'Red', rgb: { r: 255, g: 0, b: 0 } },
+    { label: 'Red-Orange', rgb: { r: 255, g: 69, b: 0 } },
     { label: 'Orange', rgb: { r: 255, g: 128, b: 0 } },
     { label: 'Yellow', rgb: { r: 255, g: 255, b: 0 } },
+    { label: 'Yellow-Green', rgb: { r: 154, g: 205, b: 50 } },
     { label: 'Green', rgb: { r: 0, g: 255, b: 0 } },
     { label: 'Cyan', rgb: { r: 0, g: 255, b: 255 } },
     { label: 'Blue', rgb: { r: 0, g: 0, b: 255 } },
+    { label: 'Indigo', rgb: { r: 75, g: 0, b: 130 } },
     { label: 'Violet', rgb: { r: 128, g: 0, b: 255 } },
+    { label: 'Magenta', rgb: { r: 255, g: 0, b: 255 } },
     { label: 'White', rgb: { r: 255, g: 255, b: 255 } },
+    { label: 'Black', rgb: { r: 0, g: 0, b: 0 } },
   ];
+
+  protected readonly axisOptions: readonly { value: SweepAxis; label: string }[] = [
+    { value: 'x', label: 'Horizontal' },
+    { value: 'y', label: 'Vertical' },
+  ];
+
+  /** Ephemeral, controller-local color memory: stash/recall up to four colors mid-session. */
+  protected readonly memory = signal<readonly (Rgb | null)[]>(Array(MEMORY_SLOTS).fill(null));
+  private nextSlot = 0;
 
   protected readonly lockOptions: readonly { value: Lock; label: string }[] = [
     { value: 'none', label: 'None' },
@@ -189,6 +208,20 @@ export class App {
     return 'caution';
   });
 
+  // ---- KITT sweep reads ----
+  protected readonly sweepHz = computed(() => this.state().sweep?.hz ?? 0);
+  protected readonly sweepAxis = computed<SweepAxis>(() => this.state().sweep?.axis ?? 'x');
+  protected readonly sweepRangePct = computed(() => Math.round((this.state().sweep?.range ?? 0.3) * 100));
+  protected readonly sweeping = computed(() => this.sweepHz() > 0);
+
+  // ---- Echo-back delivery confirmation ----
+  /** The headset has confirmed rendering at least as recent a frame as we last sent. */
+  protected readonly rendered = computed(
+    () => this.control.lastRenderedTs() > 0 && this.control.lastRenderedTs() >= this.control.lastSentTs(),
+  );
+  protected readonly roundTripMs = computed(() => this.control.roundTripMs());
+  protected readonly hasRenderConfirmation = computed(() => this.control.lastRenderedTs() > 0);
+
   /** Two-pane preview dots, mirroring the client renderer's stereo geometry. */
   protected readonly previewPanes = computed<{ left: PreviewDot[]; right: PreviewDot[] } | null>(() => {
     if (!this.isStereo()) return null;
@@ -243,9 +276,39 @@ export class App {
     this.control.update({ color: next, source: 'rgb', wavelengthNm: undefined });
   }
 
+  /** ±1 nudge on an RGB channel, honoring the active channel lock. */
+  stepChannel(ch: Channel, delta: number): void {
+    this.onChannel(ch, String(this.color()[ch] + delta));
+  }
+
   onWavelength(value: string): void {
     const nm = Number(value);
     this.control.update({ source: 'wavelength', wavelengthNm: nm, color: wavelengthToRgb(nm) });
+  }
+
+  /** ±1 nm nudge on the wavelength, clamped to the visible band. */
+  stepWavelength(delta: number): void {
+    const nm = Math.max(
+      this.limits.wavelengthNm.min,
+      Math.min(this.limits.wavelengthNm.max, this.wavelength() + delta),
+    );
+    this.onWavelength(String(nm));
+  }
+
+  // ---- In-session color memory slots ----
+
+  /** Stash the current color into the next slot (round-robin over M1–M4). */
+  saveColor(): void {
+    const slots = this.memory().slice();
+    slots[this.nextSlot] = { ...this.color() };
+    this.memory.set(slots);
+    this.nextSlot = (this.nextSlot + 1) % MEMORY_SLOTS;
+  }
+
+  /** Recall a stored slot as the current color (no-op for an empty slot). */
+  recallSlot(index: number): void {
+    const rgb = this.memory()[index];
+    if (rgb) this.setPreset(rgb);
   }
 
   onBrightness(value: string): void {
@@ -351,5 +414,29 @@ export class App {
 
   stopAb(): void {
     this.control.update({ background: { color: this.abColor(), hz: 0 } });
+  }
+
+  // ---- KITT sweep handlers ----
+
+  onSweepHz(value: string): void {
+    this.control.update({
+      sweep: { hz: Number(value), axis: this.sweepAxis(), range: this.sweepRangePct() / 100 },
+    });
+  }
+
+  setSweepAxis(axis: SweepAxis): void {
+    this.control.update({
+      sweep: { hz: this.sweepHz(), axis, range: this.sweepRangePct() / 100 },
+    });
+  }
+
+  onSweepRange(value: string): void {
+    this.control.update({
+      sweep: { hz: this.sweepHz(), axis: this.sweepAxis(), range: Number(value) / 100 },
+    });
+  }
+
+  stopSweep(): void {
+    this.control.update({ sweep: { hz: 0, axis: this.sweepAxis(), range: this.sweepRangePct() / 100 } });
   }
 }

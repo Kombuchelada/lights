@@ -66,8 +66,17 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   and an **A/B background** (`background.color`/`hz`) gated behind the existing
   photosensitivity consent. Dual-pane stereo is our design. Verified: server
   24/24, management 7/7, all builds clean. Open: physical headset run.
-- **Deferred Phase 3+:** `KITT` sweep, color memory slots, fuller presets,
-  ±1 fine-step, echo-back, and the SaaS roadmap. Full list in `docs/roadmap.md`.
+- ✅ **Phase 3 complete (controller ergonomics):** ephemeral **color memory
+  slots** (Save + `M1–M4`, round-robin, controller-local signal); **fuller preset
+  palette** (14 swatches incl. Far Red/Black/Red-Orange/Yellow-Green/Indigo/Magenta);
+  per-channel **±1 fine-step** buttons (RGB + nm, lock-aware); **echo-back**
+  delivery confirmation (client `AckState(ts)` → server `StateRendered` →
+  controller shows ✓ rendered + round-trip ms); and the **`KITT` sweep** (additive
+  optional `sweep` field, still `v = 2`; client animates position sinusoidally via
+  rAF, honors `prefers-reduced-motion`, works mono + stereo). Verified: server
+  27/27, management 10/10, all builds clean. Open: physical headset run of the sweep.
+- **Deferred:** the SaaS roadmap (Auth0, persistence/profiles, Stripe, scale-out).
+  Full list in `docs/roadmap.md`.
 
 ## Deployed (live on Railway)
 - ✅ **Live in production** on Railway (runbook: `docs/deployment.md`; decision: `docs/adr/0001-hosting-on-railway.md`). US "color" spelling throughout.

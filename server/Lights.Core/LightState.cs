@@ -46,6 +46,24 @@ public sealed record AbBackground
 }
 
 /// <summary>
+/// KITT scanning sweep — an oscillating light. <c>Hz</c> = 0 is off; &gt; 0
+/// oscillates the light center along <c>Axis</c> ("x" | "y") with amplitude
+/// <c>Range</c> (0..1). Animated locally on the client; movement, not a flash,
+/// so it honours <c>prefers-reduced-motion</c> rather than the flicker gate.
+/// </summary>
+public sealed record Sweep
+{
+    /// <summary>Oscillations per second; 0 = off.</summary>
+    public double Hz { get; init; }
+
+    /// <summary>Axis that sweeps: "x" (default) or "y".</summary>
+    public string Axis { get; init; } = "x";
+
+    /// <summary>Peak offset from the base position, 0..1 of the viewport.</summary>
+    public double Range { get; init; }
+}
+
+/// <summary>
 /// The complete, renderable light state — the unit of realtime sync. Mirrors the
 /// TypeScript <c>LightState</c> in <c>packages/protocol</c>. See docs/protocol.md.
 /// </summary>
@@ -94,4 +112,7 @@ public sealed record LightState
 
     /// <summary>A/B alternating background.</summary>
     public AbBackground? Background { get; init; }
+
+    /// <summary>KITT oscillating sweep of the light position.</summary>
+    public Sweep? Sweep { get; init; }
 }

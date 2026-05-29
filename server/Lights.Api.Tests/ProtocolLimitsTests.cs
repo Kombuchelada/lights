@@ -107,4 +107,36 @@ public class ProtocolLimitsTests
         Assert.Equal(0, s.Background.Color.G);
         Assert.Equal(ProtocolLimits.AbHzMax, s.Background.Hz);
     }
+
+    [Fact]
+    public void Sanitize_AbsentSweep_StaysNull()
+    {
+        Assert.Null(ProtocolLimits.Sanitize(new LightState()).Sweep);
+    }
+
+    [Fact]
+    public void Sanitize_ClampsSweepAndNormalizesAxis()
+    {
+        var s = ProtocolLimits.Sanitize(new LightState
+        {
+            Sweep = new Sweep { Hz = 99, Axis = "diagonal", Range = 5 },
+        });
+
+        Assert.Equal(ProtocolLimits.SweepHzMax, s.Sweep!.Hz);
+        Assert.Equal("x", s.Sweep.Axis); // unknown axis falls back to "x"
+        Assert.Equal(ProtocolLimits.SweepRangeMax, s.Sweep.Range);
+    }
+
+    [Fact]
+    public void Sanitize_KeepsValidVerticalSweep()
+    {
+        var s = ProtocolLimits.Sanitize(new LightState
+        {
+            Sweep = new Sweep { Hz = 1.5, Axis = "y", Range = 0.4 },
+        });
+
+        Assert.Equal(1.5, s.Sweep!.Hz);
+        Assert.Equal("y", s.Sweep.Axis);
+        Assert.Equal(0.4, s.Sweep.Range);
+    }
 }
