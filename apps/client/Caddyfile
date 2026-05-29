@@ -1,0 +1,31 @@
+# Caddy serves the PWA client and proxies the realtime backend.
+# Railway terminates TLS at its edge, so Caddy serves plain HTTP on $PORT.
+{
+	admin off
+	auto_https off
+}
+
+:{$PORT} {
+	encode gzip zstd
+
+	# API + SignalR hub → the private server service (WebSocket Upgrade handled
+	# automatically). SERVER_ORIGIN e.g. http://lights-server.railway.internal:8080
+	#
+	# `handle` blocks are mutually exclusive and matched as routes, so the proxy
+	# wins for /api and /hubs BEFORE the SPA fallback runs. (A bare `try_files`
+	# expands to a `rewrite`, which Caddy runs before `reverse_proxy` in its fixed
+	# directive order — that rewrites /api/* to /index.html and breaks the proxy.)
+	handle /api/* {
+		reverse_proxy {$SERVER_ORIGIN}
+	}
+	handle /hubs/* {
+		reverse_proxy {$SERVER_ORIGIN}
+	}
+
+	# Everything else: static SPA with history-API fallback.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

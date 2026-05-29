@@ -1,0 +1,466 @@
+<main class="shell">
+  <header class="topbar">
+    <h1>Lights <span class="sub">Controller</span></h1>
+
+    <div class="seg theme-toggle" role="radiogroup" aria-label="Theme">
+      @for (opt of themeOptions; track opt.value) {
+        <button
+          type="button"
+          class="seg-btn"
+          role="radio"
+          [class.on]="theme.mode() === opt.value"
+          [attr.aria-checked]="theme.mode() === opt.value"
+          [title]="opt.label + ' theme'"
+          (click)="setTheme(opt.value)"
+        >
+          <span aria-hidden="true">{{ opt.icon }}</span>
+          <span>{{ opt.label }}</span>
+        </button>
+      }
+    </div>
+
+    <span class="status" role="status" aria-live="polite" [attr.data-status]="control.status()">
+      <span class="sr-only">Connection: </span>{{ control.status() }}
+    </span>
+  </header>
+
+  @if (!control.session()) {
+    <section class="hero">
+      <p>
+        Create a session, then open the client on the headset phone — scan the QR code
+        or enter the session code.
+      </p>
+      <button class="primary" (click)="start()" [disabled]="control.status() === 'connecting'">
+        Start session
+      </button>
+    </section>
+  } @else {
+    <section class="code-card">
+      <app-qr [value]="control.session()!.joinUrl" />
+      <div class="code-main">
+        <span class="label">Session code</span>
+        <span class="code">{{ control.session()!.code }}</span>
+        <a class="join" [href]="control.session()!.joinUrl" target="_blank" rel="noopener">
+          {{ control.session()!.joinUrl }}
+        </a>
+        <span class="client" role="status" aria-live="polite" [class.on]="control.clientConnected()">
+          {{ control.clientConnected() ? '● Client connected' : '○ Waiting for client…' }}
+        </span>
+      </div>
+    </section>
+
+    <!-- Purely a visual mirror of the controls below; each control is already
+         labelled, so hide this from assistive tech to avoid duplicate noise. -->
+    <div class="preview" [class.stereo]="isStereo()" aria-hidden="true">
+      @if (previewPanes(); as panes) {
+        <div class="pane">
+          @for (d of panes.left; track $index) {
+            <span
+              class="dot"
+              [style.left.%]="d.left"
+              [style.top.%]="d.top"
+              [style.width.px]="d.size"
+              [style.height.px]="d.size"
+              [style.opacity]="state().brightness"
+              [style.background]="hex()"
+            ></span>
+          }
+        </div>
+        <div class="pane">
+          @for (d of panes.right; track $index) {
+            <span
+              class="dot"
+              [style.left.%]="d.left"
+              [style.top.%]="d.top"
+              [style.width.px]="d.size"
+              [style.height.px]="d.size"
+              [style.opacity]="state().brightness"
+              [style.background]="hex()"
+            ></span>
+          }
+        </div>
+      } @else {
+        <span
+          class="dot"
+          [style.left.%]="xPct()"
+          [style.top.%]="yPct()"
+          [style.width.px]="previewDiameterPx()"
+          [style.height.px]="previewDiameterPx()"
+          [style.opacity]="state().brightness"
+          [style.background]="hex()"
+        ></span>
+      }
+      @if (flickerHz() > 0) {
+        <span class="badge">⚡ {{ flickerHz() }} Hz</span>
+      }
+    </div>
+
+    <div class="stack">
+      <section class="card">
+        <h2>Color</h2>
+
+        <div class="presets">
+          @for (preset of presets; track preset.label) {
+            <button
+              type="button"
+              class="swatch"
+              [style.background]="'rgb(' + preset.rgb.r + ',' + preset.rgb.g + ',' + preset.rgb.b + ')'"
+              [attr.aria-label]="preset.label"
+              [title]="preset.label"
+              (click)="setPreset(preset.rgb)"
+            ></button>
+          }
+          <input
+            type="color"
+            [value]="hex()"
+            (input)="onHexInput($any($event.target).value)"
+            aria-label="Custom color"
+          />
+        </div>
+
+        <label class="field">
+          <span class="label">Red <em>{{ color().r }}</em></span>
+          <input
+            class="chan-r"
+            type="range"
+            min="0"
+            max="255"
+            [value]="color().r"
+            (input)="onChannel('r', $any($event.target).value)"
+            aria-label="Red channel (0–255)"
+          />
+        </label>
+        <label class="field">
+          <span class="label">Green <em>{{ color().g }}</em></span>
+          <input
+            class="chan-g"
+            type="range"
+            min="0"
+            max="255"
+            [value]="color().g"
+            (input)="onChannel('g', $any($event.target).value)"
+            aria-label="Green channel (0–255)"
+          />
+        </label>
+        <label class="field">
+          <span class="label">Blue <em>{{ color().b }}</em></span>
+          <input
+            class="chan-b"
+            type="range"
+            min="0"
+            max="255"
+            [value]="color().b"
+            (input)="onChannel('b', $any($event.target).value)"
+            aria-label="Blue channel (0–255)"
+          />
+        </label>
+
+        <div class="field">
+          <span class="label">Channel lock</span>
+          <div class="seg" role="radiogroup" aria-label="Lock color channels together">
+            @for (opt of lockOptions; track opt.value) {
+              <button
+                type="button"
+                class="seg-btn"
+                role="radio"
+                [class.on]="lock() === opt.value"
+                [attr.aria-checked]="lock() === opt.value"
+                (click)="setLock(opt.value)"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+          <span class="hint">Locked channels move together when you drag any one of them.</span>
+        </div>
+
+        <div class="field">
+          <span class="label">
+            Wavelength <em>{{ wavelength() }} nm</em>
+            @if (usingWavelength()) { <span class="tag">spectral</span> }
+          </span>
+          <input
+            class="spectrum"
+            type="range"
+            [min]="limits.wavelengthNm.min"
+            [max]="limits.wavelengthNm.max"
+            [value]="wavelength()"
+            (input)="onWavelength($any($event.target).value)"
+            aria-label="Wavelength in nanometers"
+          />
+          <span class="hint">
+            Sets the color spectrally ({{ limits.wavelengthNm.min }}–{{ limits.wavelengthNm.max }} nm).
+            Editing RGB switches back to manual color.
+          </span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Light</h2>
+        <label class="field">
+          <span class="label">Brightness <em>{{ brightnessPct() }}%</em></span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            [value]="brightnessPct()"
+            (input)="onBrightness($any($event.target).value)"
+            aria-label="Brightness percent"
+          />
+        </label>
+        <label class="field">
+          <span class="label">Size <em>{{ radiusPct() }}%</em></span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            [value]="radiusPct()"
+            (input)="onRadius($any($event.target).value)"
+            aria-label="Light size percent"
+          />
+        </label>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <h2 style="margin: 0">Position</h2>
+          <button type="button" class="link" (click)="center()">Center</button>
+        </div>
+        <label class="sub-field">
+          <span>X</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            [value]="xPct()"
+            (input)="onX($any($event.target).value)"
+            [attr.aria-label]="'Horizontal position, ' + xPct() + ' percent'"
+          />
+        </label>
+        <label class="sub-field" style="margin-top: 12px">
+          <span>Y</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            [value]="yPct()"
+            (input)="onY($any($event.target).value)"
+            [attr.aria-label]="'Vertical position, ' + yPct() + ' percent'"
+          />
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Stereo / VR</h2>
+        <div class="field">
+          <span class="label">Render mode</span>
+          <div class="seg" role="radiogroup" aria-label="Stereo render mode">
+            @for (opt of modeOptions; track opt.value) {
+              <button
+                type="button"
+                class="seg-btn"
+                role="radio"
+                [class.on]="mode() === opt.value"
+                [attr.aria-checked]="mode() === opt.value"
+                (click)="setMode(opt.value)"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+          <span class="hint">
+            Mono is the single full-screen circle. The other modes split the screen into
+            left/right panes for a headset, each driven by its eye grid below.
+          </span>
+        </div>
+
+        @if (isStereo()) {
+          <div class="eyes">
+            <div class="eye">
+              <span class="label">Left eye</span>
+              <div class="grid" role="group" aria-label="Left eye targeting grid">
+                @for (cell of gridCells; track cell.index) {
+                  <button
+                    type="button"
+                    class="cell"
+                    [class.on]="isCellOn('left', cell.index)"
+                    [style.left.%]="cell.left"
+                    [style.top.%]="cell.top"
+                    [attr.aria-pressed]="isCellOn('left', cell.index)"
+                    [attr.aria-label]="'Left eye position ' + cell.label"
+                    (click)="toggleCell('left', cell.index)"
+                  >
+                    {{ cell.label }}
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="eye">
+              <span class="label">Right eye</span>
+              <div class="grid" role="group" aria-label="Right eye targeting grid">
+                @for (cell of gridCells; track cell.index) {
+                  <button
+                    type="button"
+                    class="cell"
+                    [class.on]="isCellOn('right', cell.index)"
+                    [style.left.%]="cell.left"
+                    [style.top.%]="cell.top"
+                    [attr.aria-pressed]="isCellOn('right', cell.index)"
+                    [attr.aria-label]="'Right eye position ' + cell.label"
+                    (click)="toggleCell('right', cell.index)"
+                  >
+                    {{ cell.label }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+          @if (mode() === 'paired') {
+            <span class="hint">Paired mode mirrors every position to both eyes.</span>
+          }
+
+          <label class="field">
+            <span class="label">Aperture (dot size) <em>{{ aperturePct() }}%</em></span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              [value]="aperturePct()"
+              (input)="onAperture($any($event.target).value)"
+              aria-label="Aperture dot size percent"
+            />
+          </label>
+          <label class="field">
+            <span class="label">Eye distance <em>{{ eyeDistancePct() }}</em></span>
+            <input
+              type="range"
+              min="-100"
+              max="100"
+              [value]="eyeDistancePct()"
+              (input)="onEyeDistance($any($event.target).value)"
+              aria-label="Interpupillary pane offset"
+            />
+            <span class="hint">Shifts the two panes apart (positive) or together (negative).</span>
+          </label>
+
+          <div class="field">
+            <span class="label">Rotation</span>
+            <label class="rot-row">
+              <input
+                type="checkbox"
+                [checked]="rotationLock()"
+                (change)="setRotationLock($any($event.target).checked)"
+              />
+              <span>Lock left &amp; right together</span>
+            </label>
+          </div>
+          <label class="sub-field">
+            <span>L</span>
+            <input
+              type="range"
+              [min]="limits.rotationDeg.min"
+              [max]="limits.rotationDeg.max"
+              [value]="leftRotation()"
+              (input)="onRotation('left', $any($event.target).value)"
+              [attr.aria-label]="'Left eye rotation, ' + leftRotation() + ' degrees'"
+            />
+          </label>
+          <label class="sub-field" style="margin-top: 12px">
+            <span>R</span>
+            <input
+              type="range"
+              [min]="limits.rotationDeg.min"
+              [max]="limits.rotationDeg.max"
+              [value]="rightRotation()"
+              (input)="onRotation('right', $any($event.target).value)"
+              [attr.aria-label]="'Right eye rotation, ' + rightRotation() + ' degrees'"
+            />
+          </label>
+        }
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <h2 style="margin: 0">Flicker</h2>
+          @if (flickerHz() > 0) {
+            <button type="button" class="link" (click)="stopFlicker()">Stop</button>
+          }
+        </div>
+        <label class="field">
+          <span class="label">Frequency <em>{{ flickerHz() }} Hz</em></span>
+          <input
+            class="flicker"
+            [class.risk-high]="flickerRisk() === 'high'"
+            type="range"
+            [min]="limits.flickerHz.min"
+            [max]="limits.flickerHz.max"
+            step="1"
+            [value]="flickerHz()"
+            (input)="onFlicker($any($event.target).value)"
+            aria-label="Flicker frequency in hertz"
+          />
+        </label>
+        <div class="warn" role="status" aria-live="polite">
+          @if (flickerRisk() === 'high') {
+            <p class="warn-high">
+              ⚠ High-risk band ({{ riskBand.min }}–{{ riskBand.max }} Hz). These frequencies are the
+              most likely to trigger photosensitive seizures. The client must give explicit consent
+              before any flicker is shown.
+            </p>
+          } @else if (flickerRisk() === 'caution') {
+            <p class="warn-caution">
+              ⚠ Flashing light can trigger seizures in people with photosensitive epilepsy. The
+              client must consent before flicker is rendered.
+            </p>
+          }
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="row">
+          <h2 style="margin: 0">A/B background</h2>
+          @if (abHz() > 0) {
+            <button type="button" class="link" (click)="stopAb()">Stop</button>
+          }
+        </div>
+        <div class="presets">
+          <input
+            type="color"
+            [value]="abHex()"
+            (input)="onAbColor($any($event.target).value)"
+            aria-label="A/B background color"
+          />
+          <span class="hint">A second backdrop color for contrast protocols.</span>
+        </div>
+        <label class="field">
+          <span class="label">Alternation <em>{{ abHz() }} Hz</em></span>
+          <input
+            class="flicker"
+            [class.risk-high]="abRisk() === 'high'"
+            type="range"
+            [min]="limits.abHz.min"
+            [max]="limits.abHz.max"
+            step="1"
+            [value]="abHz()"
+            (input)="onAbHz($any($event.target).value)"
+            aria-label="A/B background alternation frequency in hertz"
+          />
+          <span class="hint">0 Hz = steady color. Above 0, the backdrop flashes between black and the color.</span>
+        </label>
+        <div class="warn" role="status" aria-live="polite">
+          @if (abRisk() === 'high') {
+            <p class="warn-high">
+              ⚠ High-risk band ({{ riskBand.min }}–{{ riskBand.max }} Hz). A full-screen flashing
+              background is a seizure risk; the client must consent before it is shown.
+            </p>
+          } @else if (abRisk() === 'caution') {
+            <p class="warn-caution">
+              ⚠ An alternating background flashes the whole screen. The client must consent before
+              it is rendered.
+            </p>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</main>

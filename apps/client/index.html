@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <title>Lights — Client</title>
+  </head>
+  <body>
+    <canvas id="screen"></canvas>
+
+    <div id="overlay" class="overlay">
+      <div class="panel" role="dialog" aria-labelledby="join-title">
+        <h1 id="join-title">Lights</h1>
+        <p id="status" class="status">Enter the session code from the controller.</p>
+        <form id="join-form" autocomplete="off">
+          <label for="code" class="sr-only">Session code</label>
+          <input
+            id="code"
+            name="code"
+            inputmode="latin"
+            autocapitalize="characters"
+            spellcheck="false"
+            maxlength="8"
+            placeholder="CODE"
+            aria-describedby="status"
+          />
+          <button id="join" type="submit">Connect</button>
+        </form>
+        <button id="scan" type="button" class="ghost" hidden>📷 Scan QR code</button>
+        <p class="hint">
+          Place the phone in the headset, then tap the screen to go full-screen.
+          Press and hold the screen to return here.
+        </p>
+        <div class="actions">
+          <button id="resume" type="button" class="ghost" hidden>Resume session</button>
+          <button id="reload" type="button" class="ghost">Reload app</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="scanner" class="overlay hidden">
+      <div class="panel scanner-panel" role="dialog" aria-labelledby="scanner-title" aria-modal="true">
+        <h2 id="scanner-title">Scan the QR code</h2>
+        <div class="viewport">
+          <video id="scanner-video" playsinline muted></video>
+          <div class="reticle" aria-hidden="true"></div>
+        </div>
+        <p id="scanner-status" class="status" role="status" aria-live="polite">
+          Point the camera at the controller's QR code.
+        </p>
+        <div class="actions">
+          <button id="scanner-cancel" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <canvas id="scanner-canvas" class="sr-only" aria-hidden="true"></canvas>
+
+    <div id="consent" class="overlay hidden">
+      <div class="panel" role="dialog" aria-labelledby="consent-title" aria-modal="true">
+        <h2 id="consent-title">Flashing-light warning</h2>
+        <p>
+          This session uses a flickering light. Flashing light can trigger seizures in people
+          with photosensitive epilepsy. Do not use if you or anyone present may be at risk.
+          This is not a medical device.
+        </p>
+        <div class="actions">
+          <button id="consent-decline" type="button">Keep steady</button>
+          <button id="consent-accept" type="button" class="danger">
+            I understand — allow flicker
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

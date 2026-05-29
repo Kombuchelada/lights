@@ -1,0 +1,36 @@
+name: ci
+
+# Quality gate. Railway deploys natively (it watches `main` and rebuilds each
+# service from its Dockerfile on push), so this workflow does NOT deploy — it
+# runs the server tests and front-end builds so failures are visible on every
+# push and PR. To make a green gate *block* deploys, switch Railway off
+# auto-deploy and add a Railway-CLI deploy job here (see docs/deployment.md).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet test server/Lights.sln -c Release --nologo
+
+  build-frontends:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build client
+        working-directory: apps/client
+        run: npm ci && npm run build
+      - name: Build management
+        working-directory: apps/management
+        run: npm ci && npm run build

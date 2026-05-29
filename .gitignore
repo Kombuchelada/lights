@@ -1,0 +1,51 @@
+# ---- Node / TypeScript ----
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.npm/
+.eslintcache
+
+# ---- Angular ----
+.angular/
+apps/management/.angular/
+coverage/
+
+# ---- Vite ----
+apps/client/dist/
+*.local
+
+# ---- .NET ----
+bin/
+obj/
+*.user
+*.suo
+.vs/
+[Tt]est[Rr]esults/
+*.nupkg
+artifacts/
+
+# ---- Env / secrets ----
+.env
+.env.*
+!.env.example
+appsettings.Development.local.json
+*.pfx
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.recommended.json
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+
+# ---- Local dev TLS certs (real-device HTTPS testing; see docs/testing.md) ----
+*.pem
+devcert.*
+devkey.*

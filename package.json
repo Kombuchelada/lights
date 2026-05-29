@@ -1,0 +1,17 @@
+{
+  "name": "lights",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Realtime light-control for a phone-in-a-headset stimulus, with a modern accessible web controller.",
+  "scripts": {
+    "protocol:build": "npm --prefix packages/protocol run build",
+    "client:dev": "npm --prefix apps/client run dev",
+    "client:build": "npm --prefix apps/client run build",
+    "management:start": "npm --prefix apps/management start",
+    "management:build": "npm --prefix apps/management run build"
+  },
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  }
+}

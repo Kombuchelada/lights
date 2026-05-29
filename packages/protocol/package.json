@@ -1,0 +1,24 @@
+{
+  "name": "@lights/protocol",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared wire-protocol types and constants for the Lights light-control system. Hand-kept in sync with the C# DTOs in server/Lights.Core.",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,15 @@
+# Keep Railway/Docker build contexts small and reproducible.
+# Build context is the repo root for every service (the front-ends import
+# ../../packages/protocol), so this lives at the root.
+**/node_modules
+**/dist
+**/.angular
+**/bin
+**/obj
+**/.vite
+.git
+.github
+**/*.log
+# docs / local tooling never belong in an image
+docs
+.claude

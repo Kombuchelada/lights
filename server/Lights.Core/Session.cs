@@ -1,0 +1,16 @@
+namespace Lights.Core;
+
+/// <summary>A controller↔client pairing. Connection ids and last state are set by the hub.</summary>
+public sealed class Session
+{
+    public required string Id { get; init; }
+    public required string Code { get; init; }
+    public required DateTimeOffset CreatedAt { get; init; }
+    public required DateTimeOffset ExpiresAt { get; init; }
+
+    public string? ControllerConnectionId { get; set; }
+    public string? ClientConnectionId { get; set; }
+
+    /// <summary>Last validated state, replayed to a client when it (re)joins.</summary>
+    public LightState? LastState { get; set; }
+}

@@ -1,0 +1,61 @@
+/* Global theme tokens. The active theme is set by ThemeService on
+ * <html data-theme="…">; `:root` holds the dark defaults, overridden for light. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0b0d10;
+  --panel: #15191e;
+  --panel-2: #1b2026;
+  --text: #e6e8eb;
+  --muted: #9aa0a6;
+  --accent: #3b82f6;
+  /* A darker accent for *filled* surfaces (buttons): white text on the lighter
+   * --accent only reaches 3.68:1, below WCAG AA. #2563eb gives 5.17:1. --accent
+   * stays light for use as link/border text on the dark background. */
+  --accent-fill: #2563eb;
+  --border: #262b31;
+  --ok: #16a34a;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --panel-2: #eef1f4;
+  --text: #1a1d21;
+  --muted: #5a6068;
+  --accent: #2563eb;
+  --accent-fill: #2563eb; /* white text → 5.17:1 (AA) */
+  --border: #e2e6ea;
+  --ok: #15803d;
+  --warn: #b45309;
+  --danger: #dc2626;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+}
+
+/* Visually hidden, but available to screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

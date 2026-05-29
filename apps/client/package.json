@@ -1,0 +1,20 @@
+{
+  "name": "@lights/client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lights headset client — pure-black canvas PWA that renders the light stimulus.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@microsoft/signalr": "^8.0.0",
+    "jsqr": "^1.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0"
+  }
+}
