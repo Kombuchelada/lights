@@ -12,7 +12,7 @@
  * must be registered as Allowed Callback / Logout / Web Origin URLs in Auth0.
  */
 export const authConfig = {
-  domain: 'dev-en23jhoni7eu3ibw.us.auth0.com',
+  domain: 'login.lumessa.xyz',
   clientId: 'yTdTbnDzjOOjtDht55Q4pXOAVKXaQe5c',
   audience: 'https://api.lumessa.xyz',
 } as const;
