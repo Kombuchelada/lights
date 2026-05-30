@@ -76,18 +76,22 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   optional `sweep` field, still `v = 2`; client animates position sinusoidally via
   rAF, honors `prefers-reduced-motion`, works mono + stereo). Verified: server
   27/27, management 10/10, all builds clean. ✅ User-tested on a real device (incl. the sweep).
-- ✅ **Auth0 (code complete; awaiting tenant values):** clinician-only auth. Server
-  validates Auth0 JWTs (`Auth0__Domain`/`Auth0__Audience`); `POST /api/sessions` +
-  the hub **controller** role require auth (the **client** role stays anonymous
-  code-join); sessions are account-scoped by `sub`; CORS is an env allowlist
-  (`Cors__AllowedOrigins`). SPA uses `@auth0/auth0-angular` (interceptor on `/api/*`,
-  hub `accessTokenFactory` → query-string token) + login/logout UI gating "Start
-  session". Auth UI/enforcement self-suppresses until real values are filled in
-  (`auth.config.ts` `isAuthConfigured`), so dev runs unauthenticated. To go live:
-  fill `apps/management/src/app/auth.config.ts` + set the server env vars — see
-  `docs/auth0.md` "Going live". Verified: server 27/27, management 10/10, builds clean.
+- ✅ **Auth0 (live in production):** clinician-only auth through the Auth0 **custom
+  domain `login.lumessa.xyz`** (tenant `dev-en23jhoni7eu3ibw`, US; SPA app "Lumessa";
+  API audience `https://api.lumessa.xyz`; **Google + email/password** login, Microsoft
+  deferred). Server validates Auth0 JWTs; `POST /api/sessions` + the hub **controller**
+  role require auth (the **client** role stays anonymous code-join); sessions are
+  account-scoped by `sub`; CORS is an env allowlist (`Cors__AllowedOrigins`). SPA uses
+  `@auth0/auth0-angular` (`domain = login.lumessa.xyz`; interceptor on `/api/*`, hub
+  `accessTokenFactory` → query-string token) + login/logout UI gating "Start session".
+  **Dual issuer:** the server's `ValidIssuers` accepts both the custom-domain and
+  default-tenant issuers (they share signing keys), configurable via
+  `Auth0__AdditionalIssuers` — so token validation isn't coupled to a single
+  `Auth0__Domain`. Auth UI/enforcement self-suppresses when unconfigured
+  (`auth.config.ts` `isAuthConfigured`), so local dev runs unauthenticated. See
+  `docs/auth0.md`. Verified: server 27/27, management 10/10, builds clean.
 - **Deferred:** the rest of the SaaS roadmap (persistence/profiles, Stripe,
-  scale-out; Auth0 RBAC/custom-domain follow-ups). Full list in `docs/roadmap.md`.
+  scale-out; Auth0 RBAC + Microsoft social follow-ups). Full list in `docs/roadmap.md`.
 
 ## Deployed (live on Railway)
 - ✅ **Live in production** on Railway (runbook: `docs/deployment.md`; decision: `docs/adr/0001-hosting-on-railway.md`). US "color" spelling throughout.

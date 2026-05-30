@@ -127,9 +127,10 @@ without reworking the realtime core.
 
 - ✅ **Auth (Auth0).** JWT bearer on the API + a hub access token; Angular Auth0
   SPA SDK; session-create + controller hub role require auth; account-scoped
-  sessions by `sub`. Closed the "no auth / open CORS" limitation. Remaining
-  follow-ups (deferred): RBAC/roles, Auth0 custom domain `auth.lumessa.xyz`, and
-  persistent per-account room codes. **See [`auth0.md`](auth0.md).**
+  sessions by `sub`; login on the **custom domain `login.lumessa.xyz`** (server
+  accepts both custom-domain + default-tenant issuers). Closed the "no auth / open
+  CORS" limitation. Remaining follow-ups (deferred): RBAC/roles, Microsoft social,
+  and persistent per-account room codes. **See [`auth0.md`](auth0.md).**
 - 💤 **Persistence / profiles / folders.** Swap `InMemorySessionStore` for EF
   Core (Postgres/SQL Server); saved "protocols" reuse the `LightState` DTO;
   folders as owned entities. Removes the volatile single-instance limitation.

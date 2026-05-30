@@ -132,7 +132,9 @@ This is **not** a medical device and makes no clinical claims.
   `/hubs/*`). `POST /api/sessions` and the hub's **controller** role require auth;
   the **client** role stays anonymous. Sessions are account-scoped to the
   controller's `sub`. CORS is an env-driven allowlist (`Cors__AllowedOrigins`).
-  Deferred: RBAC/roles, custom auth domain, persistent per-account room codes.
+  Login is served on the Auth0 **custom domain `login.lumessa.xyz`**; the server's
+  `ValidIssuers` accepts both that and the default-tenant issuer (shared signing
+  keys). Deferred: RBAC/roles, Microsoft social, persistent per-account room codes.
 - **Persistence / profiles / folders:** swap the in-memory session store for
   EF Core (Postgres/SQL Server). Saved "protocols" reuse the `LightState` DTO;
   folders are owned entities.

@@ -1,11 +1,25 @@
 # Auth0 — requirements & implementation handoff
 
-Status: **code complete; awaiting tenant values.** All the server and SPA wiring
-is implemented and the builds/tests are green. The only remaining steps are
-**user-side**: create the Auth0 tenant + apps and drop in the three public values
-(see [Going live](#going-live--what-the-user-must-do) below). Closes the
-"no authentication; dev CORS wide-open" limitation in [`roadmap.md`](roadmap.md)
-and the auth seam noted in [`architecture.md`](architecture.md).
+Status: **✅ live in production.** Clinician auth is deployed and working through
+the Auth0 **custom domain** `login.lumessa.xyz`. Closes the "no authentication;
+dev CORS wide-open" limitation in [`roadmap.md`](roadmap.md) and the auth seam
+noted in [`architecture.md`](architecture.md).
+
+### As deployed
+
+| Thing | Value |
+|---|---|
+| Auth0 tenant | `dev-en23jhoni7eu3ibw` (US region) |
+| Custom login domain | **`login.lumessa.xyz`** — controller login routes through this |
+| SPA application | "Lumessa", client ID `yTdTbnDzjOOjtDht55Q4pXOAVKXaQe5c` |
+| API (audience) | **`https://api.lumessa.xyz`** (RS256) |
+| Login methods (live) | Email+password (Database) + **Google** (own OAuth keys) |
+| Deferred socials | Microsoft (needs a self-managed Azure app registration) |
+
+The SPA's `domain` ([`auth.config.ts`](../apps/management/src/app/auth.config.ts))
+is `login.lumessa.xyz`, so tokens carry `iss: https://login.lumessa.xyz/`. The
+server validates against **both** the custom-domain and default-tenant issuers
+(they share signing keys) — see the dual-issuer note below.
 
 ## What's implemented
 
@@ -14,6 +28,14 @@ and the auth seam noted in [`architecture.md`](architecture.md).
   from `Auth0__Domain` + `Auth0__Audience` (no-ops gracefully if unset, so dev
   without a tenant still runs). `OnMessageReceived` reads `access_token` from the
   query string for `/hubs/*` (SignalR handshake can't set an Authorization header).
+- **Dual issuer:** the Auth0 custom domain (`login.lumessa.xyz`) and the default
+  tenant domain share signing keys, so the SPA may present tokens under either
+  issuer during/after the custom-domain switch. The server sets
+  `TokenValidationParameters.ValidIssuers` to accept both — configurable via
+  `Auth0__AdditionalIssuers` (comma-separated), defaulting to the prod custom
+  domain — rather than coupling validation to a single `Auth0__Domain`. This is
+  the recommended Auth0 custom-domain-migration pattern and also makes the server
+  resilient to a stale/mismatched `Auth0__Domain`.
 - `app.UseAuthentication()` / `UseAuthorization()` after `UseCors`.
 - `POST /api/sessions` is `.RequireAuthorization()`; `GET /api/sessions/{code}` and
   `/healthz` stay anonymous.
@@ -34,18 +56,26 @@ and the auth seam noted in [`architecture.md`](architecture.md).
   suppressed until real tenant values are present (`isAuthConfigured`), so dev
   without a tenant is unaffected.
 
-## Going live — what the user must do
+## Configuration (as deployed)
 
-1. Create the Auth0 account + **US** tenant, then the **SPA Application** + **API**
-   (resource server) and enable Google/Microsoft connections (details below).
-2. Put the three **public** values in
-   [`auth.config.ts`](../apps/management/src/app/auth.config.ts): `domain`,
-   `clientId`, `audience` (audience defaults to the proposed `https://api.lumessa.xyz`).
-3. Set the matching server env vars on the Railway `lights-server` service:
-   `Auth0__Domain` (e.g. `lumessa.us.auth0.com`) and `Auth0__Audience`
-   (= the API Identifier). Optionally `Cors__AllowedOrigins`.
-4. Register the SPA URLs in Auth0 (callback/logout/web-origin) for both
-   `https://app.lumessa.xyz` and `http://localhost:4200`.
+**Public SPA values** ([`auth.config.ts`](../apps/management/src/app/auth.config.ts)):
+`domain: login.lumessa.xyz`, `clientId: yTdTbnDzjOOjtDht55Q4pXOAVKXaQe5c`,
+`audience: https://api.lumessa.xyz`. `redirectUri` is the page origin at runtime,
+so one build serves `https://app.lumessa.xyz` (prod) and `http://localhost:4200`.
+
+**Server env** (Railway `lights-server`): `Auth0__Audience = https://api.lumessa.xyz`,
+`Cors__AllowedOrigins`, and `Auth0__Domain` (drives the OIDC metadata/JWKS fetch;
+issuer acceptance is handled by the dual-issuer `ValidIssuers` above, so the server
+is robust to which domain this points at). `Auth0__AdditionalIssuers` is optional.
+
+**Auth0 dashboard** (not settable via the MCP — done by hand): SPA callback/logout/
+web-origin URLs for `https://app.lumessa.xyz` + `http://localhost:4200`; Database +
+Google connections enabled on the app; Google on the tenant's own OAuth keys (with
+both `login.lumessa.xyz/login/callback` and the default-tenant callback registered);
+the **custom domain** `login.lumessa.xyz` verified (CNAME) and certificate provisioned.
+
+> **To rotate any value later:** update [`auth.config.ts`](../apps/management/src/app/auth.config.ts)
+> (public, build-time) and/or the Railway env vars, then redeploy.
 
 ## Goal
 
@@ -61,7 +91,8 @@ become scoped to the authenticated controller's account.
 | Login methods | **Launching with: Email+password** (Auth0 Database connection) + **Google** social. **Microsoft** social deferred (needs a self-managed Azure app registration — no Auth0 dev keys); Apple optional later ($99/yr Apple Developer account). |
 | Headset client auth | **None** — anonymous code-join. Only the controller logs in. |
 | Session ownership | Sessions become **account-scoped** to the controller's user (`sub`). |
-| Deferred for now | RBAC/roles (single clinician role), Auth0 custom domain (`auth.lumessa.xyz`), Stripe/billing gating. |
+| Custom login domain | ✅ **done** — `login.lumessa.xyz` (Auth0-managed cert). |
+| Deferred for now | RBAC/roles (single clinician role), Microsoft social, Stripe/billing gating. |
 
 ## Auth0 objects to create (dashboard or Auth0 MCP)
 
@@ -88,9 +119,10 @@ become scoped to the authenticated controller's account.
 ## Architecture / token flow
 
 ```
-Clinician → Angular SPA (auth0-angular) → login → access token (audience = API id)
+Clinician → Angular SPA (auth0-angular, domain = login.lumessa.xyz)
+          → login → access token (iss = https://login.lumessa.xyz/, audience = https://api.lumessa.xyz)
           → Bearer on /api/*  +  accessTokenFactory on the SignalR hub
-.NET server validates:  Authority = https://<tenant>.us.auth0.com/   Audience = API id
+.NET server validates:  ValidIssuers = { https://login.lumessa.xyz/, default tenant }   Audience = https://api.lumessa.xyz
 ```
 
 - **SignalR caveat:** browsers can't set an `Authorization` header on the
@@ -167,13 +199,14 @@ No change — auth is transport-level, not part of the wire contract.
 8. Update [`roadmap.md`](roadmap.md) (Auth0 item) + the auth section of
    [`architecture.md`](architecture.md).
 
-## Open questions to confirm before/while building
+## Resolved / deferred
 
-- **Tenant domain** — set once the tenant is named, e.g. `lumessa.us.auth0.com`.
-  (Custom auth domain `auth.lumessa.xyz` is deferred.)
-- **API identifier/audience** — proposed `https://api.lumessa.xyz`; confirm.
-- **RBAC/roles** — recommended **deferred** (single clinician role) unless multi-role
-  is needed now.
+- **Tenant + login domain** — ✅ resolved: tenant `dev-en23jhoni7eu3ibw` (US), login
+  served on the **custom domain `login.lumessa.xyz`** (verified + cert provisioned).
+- **API identifier/audience** — ✅ `https://api.lumessa.xyz`.
+- **RBAC/roles** — **deferred** (single clinician role) until multi-role is needed.
+- **Microsoft social login** — **deferred** (needs a self-managed Azure app
+  registration; no Auth0 dev keys). Google + email/password are live.
 
 ## Optional: Auth0 MCP server
 
