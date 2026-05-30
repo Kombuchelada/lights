@@ -126,6 +126,7 @@ without reworking the realtime core.
 - 💤 **Auth (Auth0).** JWT bearer on the API + a hub access token; Angular Auth0
   SPA SDK; `[Authorize]` on endpoints/hub; account-scoped sessions + optional
   persistent per-account room codes. Closes the "no auth / open CORS" limitation.
+  **Requirements + implementation plan: [`auth0.md`](auth0.md).**
 - 💤 **Persistence / profiles / folders.** Swap `InMemorySessionStore` for EF
   Core (Postgres/SQL Server); saved "protocols" reuse the `LightState` DTO;
   folders as owned entities. Removes the volatile single-instance limitation.
