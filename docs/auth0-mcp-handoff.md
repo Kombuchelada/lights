@@ -16,10 +16,22 @@ Callback / Logout / Allowed-Origins on the SPA are set to `https://app.lumessa.x
 + `http://localhost:4200`. The three values are wired into
 [`auth.config.ts`](../apps/management/src/app/auth.config.ts); builds + tests green.
 
-## ⚠️ Remaining MANUAL steps (the MCP has no tool for these)
+## ✅ Code + deploy done (2026-05-29)
+
+- Committed + pushed; `main` rebuilt all three Railway services (controller SPA
+  ships the real `auth.config.ts`).
+- **Railway `lights-server` env set** (redeploy `7b346162`): `Auth0__Domain` =
+  `dev-en23jhoni7eu3ibw.us.auth0.com`, `Auth0__Audience` = `https://api.lumessa.xyz`,
+  `Cors__AllowedOrigins` = `https://app.lumessa.xyz,http://localhost:4200`.
+- Enforcement is gated on config: with the env vars set, prod requires a clinician
+  token; without them (local dev) the controller stays anonymous.
+
+## ⚠️ Remaining MANUAL steps — login WILL fail until these are done
+
+The Auth0 MCP has no connection / web-origins tool, so these are dashboard-only:
 
 1. **Enable login connections on the SPA app** — apps created via the Management
-   API are *not* auto-added to connections, so login will fail until you do this.
+   API are *not* auto-added to connections, so login fails until you do this.
    Dashboard → Applications → **Lumessa Controller** → **Connections** tab → enable:
    - **Database** (Username-Password-Authentication)
    - **Google** (`google-oauth2`)
@@ -28,15 +40,9 @@ Callback / Logout / Allowed-Origins on the SPA are set to `https://app.lumessa.x
 2. **Add Allowed Web Origins** (needed for SPA silent token refresh; the MCP can't
    set `web_origins`). Same app → **Settings** → *Allowed Web Origins* → add
    `https://app.lumessa.xyz` and `http://localhost:4200` → Save.
-3. **Server env (Railway `lights-server`)**: set `Auth0__Domain` =
-   `dev-en23jhoni7eu3ibw.us.auth0.com`, `Auth0__Audience` = `https://api.lumessa.xyz`.
-   Optionally `Cors__AllowedOrigins`.
-4. **Deploy together**: the SPA prod build (with `auth.config.ts`) and the server
-   env vars must land in the same window — otherwise the live controller calls the
-   API without a token and 401s. Push to `main` (rebuilds all three) *and* set the
-   server env vars, then test login at `https://app.lumessa.xyz`.
 
-> Local dev works as soon as steps 1–2 are done: `npm start` (4200) → "Log in".
+Then verify login at **https://app.lumessa.xyz** (and/or local `npm start` → :4200).
+Until step 1 is done, "Log in" will error with *no connections enabled for the client*.
 
 ---
 
