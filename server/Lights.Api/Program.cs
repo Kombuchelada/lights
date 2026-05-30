@@ -17,6 +17,19 @@ var auth0Domain = builder.Configuration["Auth0:Domain"];
 var auth0Audience = builder.Configuration["Auth0:Audience"];
 var authConfigured = !string.IsNullOrWhiteSpace(auth0Domain) && !string.IsNullOrWhiteSpace(auth0Audience);
 
+// Accept tokens from the configured domain AND any additional issuers. An Auth0
+// custom domain (login.lumessa.xyz) and the default tenant domain share signing
+// keys, so the SPA may mint tokens under either issuer during/after the
+// custom-domain switch — we accept both rather than coupling to a single env
+// value. Extra issuers come from Auth0__AdditionalIssuers (comma-separated); the
+// production custom domain is included as a default.
+var validIssuers = new List<string>();
+if (!string.IsNullOrWhiteSpace(auth0Domain)) validIssuers.Add($"https://{auth0Domain}/");
+validIssuers.AddRange(
+    (builder.Configuration["Auth0:AdditionalIssuers"] ?? "https://login.lumessa.xyz/")
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+var auth0Issuers = validIssuers.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -26,6 +39,7 @@ builder.Services
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = authConfigured,
+            ValidIssuers = authConfigured ? auth0Issuers : null,
             ValidateAudience = authConfigured,
             ValidateIssuerSigningKey = authConfigured,
             NameClaimType = "sub",
