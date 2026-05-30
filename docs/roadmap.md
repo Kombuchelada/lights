@@ -39,9 +39,8 @@ milestones mirror §5 of `architecture.md`.
   covers the three secure-context paths (live Railway deploy / LAN + mkcert /
   HTTPS tunnel), opt-in dev TLS (`DEV_TLS_CERT`/`DEV_TLS_KEY` in the client Vite
   config), and manual scripts including the M6 reconnection / resync path.
-  - ⬜ **Hands-on device run** — the guide and tooling are ready; running the
-    scripts on a physical iOS + Android phone and filling in that doc's result
-    table is the one remaining human-in-the-loop step (needs hardware).
+  - ✅ **Hands-on device run** — maintainer manual end-to-end pass on a real
+    device; result recorded in that doc's log.
 
 ### Known Phase-1 limitations
 
@@ -81,8 +80,8 @@ render mode maps to a stereo layout.
 
 Verified: protocol/management/client builds clean; server **24/24** unit tests
 (sanitize of all v2 fields + v1 back-compat); management **7/7** (eye-grid bitmask
-toggling + paired-mode mirroring). The one human-in-the-loop step is a physical
-headset run of the dual-pane render (per `docs/testing.md`).
+toggling + paired-mode mirroring). ✅ **User-tested:** the dual-pane render was
+covered in the maintainer's manual device pass (per `docs/testing.md`).
 
 ---
 
@@ -113,8 +112,9 @@ hub method/event, no version change).
   and stereo.
 
 Verified: server **27/27** (sweep sanitize + v1/v2 back-compat), management
-**10/10** (memory round-robin, locked fine-step, sweep), all builds clean. Open:
-physical headset run of the sweep.
+**10/10** (memory round-robin, locked fine-step, sweep), all builds clean.
+✅ **User-tested:** full manual end-to-end pass on a real device (incl. the KITT
+sweep) — logged in [`testing.md`](testing.md).
 
 ---
 

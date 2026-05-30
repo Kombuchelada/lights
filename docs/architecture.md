@@ -93,8 +93,8 @@ The full wire contract is in [`protocol.md`](protocol.md).
 - [x] **M4** Wavelength (nm→RGB) picker, presets, channel lock.
 - [x] **M5** Flicker (rAF) + photosensitivity safety gate + reduced-motion.
 - [x] **M6** Theming (light/dark/system) + a11y pass + reconnection hardening.
-- [ ] **M7** Docs polish + real-device testing guide. *(In progress: docs polish
-      done; deeper a11y audit + real-device HTTPS/LAN guide remain.)*
+- [x] **M7** Docs polish + deeper a11y audit + real-device HTTPS/LAN testing
+      guide. Maintainer manual device pass recorded in `testing.md`.
 
 The full, living feature list — including deferred Phase 2 and SaaS work — is in
 [`roadmap.md`](roadmap.md).

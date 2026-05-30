@@ -170,4 +170,4 @@ when scripts 1–4 pass on at least one iOS and one Android device.
 
 | Date | Device / OS / Browser | Build | Scripts 1–5 | Notes |
 |------|-----------------------|-------|-------------|-------|
-|      |                       |       |             |       |
+| 2026-05-29 | Maintainer manual run (device not recorded) | `0921d47` | Pass | Full end-to-end manual verification of the Phase 1–3 surfaces — realtime control, stereo render, flicker/consent gate, **KITT sweep**, **echo-back delivery confirmation**, **color memory slots**, **±1 fine-step**, and the **fuller preset palette**. All working. |

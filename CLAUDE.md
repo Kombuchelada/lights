@@ -56,7 +56,8 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   live-region status, preview `aria-hidden` — see `docs/accessibility.md`); HTTPS/LAN
   real-device **testing guide** + opt-in dev TLS (`DEV_TLS_CERT`/`DEV_TLS_KEY` in the
   client `vite.config.ts`) in `docs/testing.md`. Phase 1 is feature-complete; the only
-  open item is the human-in-the-loop physical device run (logged in `docs/testing.md`).
+  open item — the human-in-the-loop physical device run — is now ✅ done (maintainer
+  manual end-to-end pass, logged in `docs/testing.md`).
 - ✅ **Phase 2 complete (stimulus depth):** additive **`v = 2`** protocol superset
   (every new field optional ⇒ a v1 state still renders mono) + a dual-pane
   **stereo** client renderer. Adds per-eye **13-bit clock-grid** targeting
@@ -65,7 +66,7 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   `rotationDeg` (+ lock), `aperture` (per-dot size), `eyeDistance` (pane offset),
   and an **A/B background** (`background.color`/`hz`) gated behind the existing
   photosensitivity consent. Dual-pane stereo is our design. Verified: server
-  24/24, management 7/7, all builds clean. Open: physical headset run.
+  24/24, management 7/7, all builds clean. ✅ User-tested on a real device.
 - ✅ **Phase 3 complete (controller ergonomics):** ephemeral **color memory
   slots** (Save + `M1–M4`, round-robin, controller-local signal); **fuller preset
   palette** (14 swatches incl. Far Red/Black/Red-Orange/Yellow-Green/Indigo/Magenta);
@@ -74,7 +75,7 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   controller shows ✓ rendered + round-trip ms); and the **`KITT` sweep** (additive
   optional `sweep` field, still `v = 2`; client animates position sinusoidally via
   rAF, honors `prefers-reduced-motion`, works mono + stereo). Verified: server
-  27/27, management 10/10, all builds clean. Open: physical headset run of the sweep.
+  27/27, management 10/10, all builds clean. ✅ User-tested on a real device (incl. the sweep).
 - **Deferred:** the SaaS roadmap (Auth0, persistence/profiles, Stripe, scale-out).
   Full list in `docs/roadmap.md`.
 
