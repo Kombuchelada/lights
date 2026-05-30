@@ -1,4 +1,4 @@
-# Lights controller (Angular) — built to static assets, served by Caddy which
+# Lumessa controller (Angular) — built to static assets, served by Caddy which
 # also reverse-proxies /api and /hubs to the private server service (so the app
 # stays same-origin: no CORS, WebSockets pass straight through).
 #

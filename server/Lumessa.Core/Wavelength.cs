@@ -1,4 +1,4 @@
-namespace Lights.Core;
+namespace Lumessa.Core;
 
 /// <summary>
 /// Visible-light wavelength (nm) → approximate sRGB, using the Bruton/Noah

@@ -47,9 +47,9 @@ for dir in packages/protocol apps/client apps/management; do
 done
 
 # --- warm the NuGet restore (faster first server build) --------------------
-if command -v dotnet >/dev/null 2>&1 && [ -f "$ROOT/server/Lights.sln" ]; then
-  echo "[session-start] dotnet restore — server/Lights.sln"
-  dotnet restore "$ROOT/server/Lights.sln" || true
+if command -v dotnet >/dev/null 2>&1 && [ -f "$ROOT/server/Lumessa.sln" ]; then
+  echo "[session-start] dotnet restore — server/Lumessa.sln"
+  dotnet restore "$ROOT/server/Lumessa.sln" || true
 fi
 
 echo "[session-start] done."

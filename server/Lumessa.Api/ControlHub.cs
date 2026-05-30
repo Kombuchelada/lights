@@ -1,7 +1,7 @@
-using Lights.Core;
+using Lumessa.Core;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Lights.Api;
+namespace Lumessa.Api;
 
 /// <summary>Result returned to a caller of <see cref="ControlHub.JoinSession"/>.</summary>
 public sealed record JoinResult(string SessionId, string Role, LightState? State);

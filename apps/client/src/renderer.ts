@@ -5,7 +5,7 @@ import {
   isEyeBitSet,
   EYE_GRID_CELLS,
   type LightState,
-} from '@lights/protocol';
+} from '@lumessa/protocol';
 
 /**
  * Pure-black canvas renderer. Draws the light as a filled circle whose alpha is

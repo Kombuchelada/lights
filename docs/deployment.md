@@ -1,4 +1,4 @@
-# Deployment — Lights on Railway
+# Deployment — Lumessa on Railway
 
 Phase-1 hosting runbook. The *why* is in [`adr/0001-hosting-on-railway.md`](adr/0001-hosting-on-railway.md).
 

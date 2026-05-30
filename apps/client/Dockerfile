@@ -1,4 +1,4 @@
-# Lights headset client (vanilla TS + Vite PWA) — built to static assets, served
+# Lumessa headset client (vanilla TS + Vite PWA) — built to static assets, served
 # by Caddy which also reverse-proxies /api and /hubs to the private server
 # service (same-origin: no CORS, WebSockets pass through). This service is the
 # QR / join-URL target (go.<domain>).

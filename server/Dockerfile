@@ -1,12 +1,12 @@
-# Lights API — ASP.NET Core (net10.0) minimal API + SignalR ControlHub.
+# Lumessa API — ASP.NET Core (net10.0) minimal API + SignalR ControlHub.
 # Build context is the repo root (set RAILWAY_DOCKERFILE_PATH=server/Dockerfile
 # on the Railway service). Only server/ is needed; there are no npm deps here.
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY server/ ./server/
-RUN dotnet restore server/Lights.sln
-RUN dotnet publish server/Lights.Api/Lights.Api.csproj \
+RUN dotnet restore server/Lumessa.sln
+RUN dotnet publish server/Lumessa.Api/Lumessa.Api.csproj \
     -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
@@ -17,4 +17,4 @@ COPY --from=build /app/publish ./
 # Fixed port 8080 keeps the private origin stable: lights-server.railway.internal:8080
 ENV ASPNETCORE_URLS=http://[::]:8080
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "Lights.Api.dll"]
+ENTRYPOINT ["dotnet", "Lumessa.Api.dll"]

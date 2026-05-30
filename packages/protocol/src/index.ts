@@ -1,10 +1,10 @@
 /**
- * @lights/protocol — shared wire-protocol types and constants for the Lights
+ * @lumessa/protocol — shared wire-protocol types and constants for the Lumessa
  * light-control system.
  *
  * This module is the single source of truth for the TypeScript surfaces
  * (management controller + client screen). It is hand-kept in sync with the
- * C# DTOs in `server/Lights.Core`. See `docs/protocol.md`.
+ * C# DTOs in `server/Lumessa.Core`. See `docs/protocol.md`.
  *
  * No runtime dependencies — safe to import from any bundler.
  */

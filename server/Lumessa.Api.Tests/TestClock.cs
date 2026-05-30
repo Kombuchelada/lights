@@ -1,4 +1,4 @@
-namespace Lights.Core.Tests;
+namespace Lumessa.Core.Tests;
 
 /// <summary>A controllable <see cref="TimeProvider"/> for deterministic expiry tests.</summary>
 internal sealed class TestClock(DateTimeOffset now) : TimeProvider

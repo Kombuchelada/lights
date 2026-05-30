@@ -1,7 +1,7 @@
 {
-  "name": "Lights Client",
-  "short_name": "Lights",
-  "description": "Headset light-stimulus screen for the Lights controller.",
+  "name": "Lumessa Client",
+  "short_name": "Lumessa",
+  "description": "Headset light-stimulus screen for the Lumessa controller.",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",

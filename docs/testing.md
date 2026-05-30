@@ -1,10 +1,10 @@
-# Testing — Lights
+# Testing — Lumessa
 
-How to verify Lights on real hardware, and the manual test scripts that close
+How to verify Lumessa on real hardware, and the manual test scripts that close
 out **M7**. Read with [`accessibility.md`](accessibility.md) (a11y checklist),
 [`architecture.md`](architecture.md), and [`deployment.md`](deployment.md).
 
-Automated coverage already runs in CI: server xUnit (`Lights.Api.Tests`) and the
+Automated coverage already runs in CI: server xUnit (`Lumessa.Api.Tests`) and the
 controller's unit tests (`apps/management`, vitest). This doc covers what those
 can't — the realtime path, the renderer, and the secure-context browser APIs
 **on an actual phone in a headset**.
@@ -70,7 +70,7 @@ HTTPS cert, so secure-context APIs work and you see live edits.
 2. **Run the server** (it stays plain HTTP on :5000; the front-end dev servers
    proxy to it and terminate TLS):
    ```sh
-   cd server && dotnet run --project Lights.Api
+   cd server && dotnet run --project Lumessa.Api
    ```
 3. **Serve the client over HTTPS on the LAN.** Vite already binds all
    interfaces (`host: true`) and reads an opt-in cert from

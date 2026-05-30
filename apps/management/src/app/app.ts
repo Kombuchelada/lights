@@ -16,7 +16,7 @@ import {
   type RenderMode,
   type SweepAxis,
   type LightState,
-} from '@lights/protocol';
+} from '@lumessa/protocol';
 
 type Channel = 'r' | 'g' | 'b';
 type Lock = 'none' | 'rg' | 'rb' | 'gb' | 'rgb';

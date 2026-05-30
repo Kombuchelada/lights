@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Lights.Core;
+namespace Lumessa.Core;
 
 /// <summary>
 /// Session pairing codes: Crockford base32 (no I/L/O/U), fixed length. Generated
