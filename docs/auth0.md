@@ -58,7 +58,7 @@ become scoped to the authenticated controller's account.
 | Choice | Decision |
 |---|---|
 | Tenant region | **US** (effectively permanent — moving regions means recreating the tenant) |
-| Login methods | **Email+password** (Auth0 Database connection) + **Google** + **Microsoft** social. Apple optional later (requires an Apple Developer account, $99/yr). |
+| Login methods | **Launching with: Email+password** (Auth0 Database connection) + **Google** social. **Microsoft** social deferred (needs a self-managed Azure app registration — no Auth0 dev keys); Apple optional later ($99/yr Apple Developer account). |
 | Headset client auth | **None** — anonymous code-join. Only the controller logs in. |
 | Session ownership | Sessions become **account-scoped** to the controller's user (`sub`). |
 | Deferred for now | RBAC/roles (single clinician role), Auth0 custom domain (`auth.lumessa.xyz`), Stripe/billing gating. |

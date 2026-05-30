@@ -34,9 +34,13 @@ The Auth0 MCP has no connection / web-origins tool, so these are dashboard-only:
    API are *not* auto-added to connections, so login fails until you do this.
    Dashboard → Applications → **Lumessa Controller** → **Connections** tab → enable:
    - **Database** (Username-Password-Authentication)
-   - **Google** (`google-oauth2`)
-   - **Microsoft** (`windowslive` — may need creating under Authentication → Social)
+   - **Google** (`google-oauth2`) — works on Auth0's shared dev keys to start
    Direct link: `https://manage.auth0.com/dashboard/us/dev-en23jhoni7eu3ibw/applications/yTdTbnDzjOOjtDht55Q4pXOAVKXaQe5c/connections`
+
+   > **Microsoft / other socials deferred** — launching with Google + email/password.
+   > Microsoft needs a self-managed Azure app registration (Auth0 has no dev keys
+   > for it); add it later via Authentication → Social with a multitenant+personal
+   > app and the callback `https://dev-en23jhoni7eu3ibw.us.auth0.com/login/callback`.
 2. **Add Allowed Web Origins** (needed for SPA silent token refresh; the MCP can't
    set `web_origins`). Same app → **Settings** → *Allowed Web Origins* → add
    `https://app.lumessa.xyz` and `http://localhost:4200` → Save.
