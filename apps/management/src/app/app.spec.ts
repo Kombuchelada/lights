@@ -1,10 +1,24 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { AuthService } from '@auth0/auth0-angular';
+import { of } from 'rxjs';
 import { App } from './app';
+
+// Minimal AuthService stub: the controller is treated as unauthenticated and the
+// token factory is never exercised in these unit tests. (Auth UI is also gated on
+// `isAuthConfigured`, which is false while placeholder tenant values are in place.)
+const authStub: Partial<AuthService> = {
+  isLoading$: of(false),
+  isAuthenticated$: of(false),
+  user$: of(null),
+  getAccessTokenSilently: (() => of('')) as unknown as AuthService['getAccessTokenSilently'],
+};
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [provideHttpClient(), { provide: AuthService, useValue: authStub }],
     }).compileComponents();
   });
 
@@ -13,11 +27,14 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should show the start-session call to action initially', async () => {
+  it('gates session start behind login when unauthenticated', async () => {
+    // Auth0 is configured (real tenant values), and the stub is unauthenticated,
+    // so the primary CTA is "Log in" — "Start session" only appears post-login.
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(text).toContain('Start session');
+    expect(text).toContain('Log in');
+    expect(text).not.toContain('Start session');
   });
 
   it('moves locked channels together when one is dragged', () => {

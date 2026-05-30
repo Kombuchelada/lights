@@ -4,7 +4,7 @@ namespace Lights.Core;
 
 public interface ISessionStore
 {
-    Session Create(TimeSpan ttl);
+    Session Create(TimeSpan ttl, string? ownerSub = null);
     Session? Get(string id);
     Session? GetByCode(string code);
     void Remove(string id);
@@ -23,7 +23,7 @@ public sealed class InMemorySessionStore : ISessionStore
 
     public InMemorySessionStore(TimeProvider? clock = null) => _clock = clock ?? TimeProvider.System;
 
-    public Session Create(TimeSpan ttl)
+    public Session Create(TimeSpan ttl, string? ownerSub = null)
     {
         var now = _clock.GetUtcNow();
         for (var attempt = 0; attempt < 10; attempt++)
@@ -37,6 +37,7 @@ public sealed class InMemorySessionStore : ISessionStore
                 Code = code,
                 CreatedAt = now,
                 ExpiresAt = now + ttl,
+                OwnerSub = ownerSub,
             };
 
             if (_codeToId.TryAdd(code, session.Id))

@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { AuthService } from '@auth0/auth0-angular';
 import { ControlService } from './control/control.service';
 import { ThemeService, type ThemeMode } from './theme.service';
+import { isAuthConfigured } from './auth.config';
 import { QrCode } from './qr-code';
 import { RovingRadiogroup } from './radiogroup.directive';
 import {
@@ -106,7 +109,27 @@ const hexToRgb = (value: string): Rgb | null => {
 export class App {
   protected readonly control = inject(ControlService);
   protected readonly theme = inject(ThemeService);
+  private readonly auth = inject(AuthService);
   protected readonly state = this.control.state;
+
+  // ---- Auth (Auth0) ----
+  /** Whether real tenant values are configured; when false, auth UI is suppressed in dev. */
+  protected readonly authConfigured = isAuthConfigured;
+  protected readonly authLoading = toSignal(this.auth.isLoading$, { initialValue: true });
+  protected readonly isAuthenticated = toSignal(this.auth.isAuthenticated$, { initialValue: false });
+  protected readonly userName = computed(() => {
+    const u = this.user();
+    return u?.name ?? u?.email ?? u?.nickname ?? '';
+  });
+  private readonly user = toSignal(this.auth.user$, { initialValue: null });
+
+  login(): void {
+    void this.auth.loginWithRedirect();
+  }
+
+  logout(): void {
+    this.auth.logout({ logoutParams: { returnTo: window.location.origin } });
+  }
 
   protected readonly limits = LIMITS;
   protected readonly riskBand = FLICKER_HIGH_RISK_BAND_HZ;

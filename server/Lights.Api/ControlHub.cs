@@ -7,6 +7,12 @@ namespace Lights.Api;
 public sealed record JoinResult(string SessionId, string Role, LightState? State);
 
 /// <summary>
+/// Whether Auth0 is configured. When false (local dev, no env vars), the hub
+/// skips the controller-auth check so the controller can run anonymously.
+/// </summary>
+public sealed record AuthEnforcement(bool Enabled);
+
+/// <summary>
 /// Realtime control hub. A controller and a client both join the SignalR group
 /// for a session; the controller's validated state is relayed to the client.
 /// See docs/protocol.md for the contract.
@@ -18,11 +24,13 @@ public sealed class ControlHub : Hub
 
     private readonly ISessionStore _store;
     private readonly ILogger<ControlHub> _logger;
+    private readonly AuthEnforcement _auth;
 
-    public ControlHub(ISessionStore store, ILogger<ControlHub> logger)
+    public ControlHub(ISessionStore store, ILogger<ControlHub> logger, AuthEnforcement auth)
     {
         _store = store;
         _logger = logger;
+        _auth = auth;
     }
 
     public async Task<JoinResult> JoinSession(string code, string role)
@@ -31,6 +39,25 @@ public sealed class ControlHub : Hub
             ?? throw new HubException("Session not found or expired.");
 
         role = role == "client" ? "client" : "controller";
+
+        // The headset client joins anonymously; the controller must be the
+        // authenticated clinician that owns this session. We don't put a blanket
+        // [Authorize] on the hub — that would block the anonymous client — so we
+        // gate the controller path here instead. Skipped when Auth0 is unconfigured.
+        if (role == "controller" && _auth.Enabled)
+        {
+            if (Context.User?.Identity?.IsAuthenticated != true)
+            {
+                throw new HubException("Authentication required to control a session.");
+            }
+
+            var sub = Context.User.FindFirst("sub")?.Value;
+            if (session.OwnerSub is { } owner && owner != sub)
+            {
+                throw new HubException("This session belongs to a different account.");
+            }
+        }
+
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(session.Id));
         Context.Items[SessionIdKey] = session.Id;
         Context.Items[RoleKey] = role;

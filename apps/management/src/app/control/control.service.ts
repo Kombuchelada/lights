@@ -1,4 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { AuthService } from '@auth0/auth0-angular';
+import { firstValueFrom } from 'rxjs';
 import {
   HubConnection,
   HubConnectionBuilder,
@@ -30,6 +33,9 @@ export class ControlService {
   private readonly apiBase = '';
   private readonly minIntervalMs = 50;
 
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
+
   private conn?: HubConnection;
   private lastSent = 0;
   private trailing?: ReturnType<typeof setTimeout>;
@@ -48,9 +54,11 @@ export class ControlService {
   async startSession(): Promise<void> {
     this.status.set('connecting');
     try {
-      const res = await fetch(`${this.apiBase}/api/sessions`, { method: 'POST' });
-      if (!res.ok) throw new Error(`Server returned ${res.status}`);
-      const session = (await res.json()) as CreateSessionResponse;
+      // Via HttpClient so the Auth0 interceptor attaches the access token; the
+      // server requires an authenticated clinician to create a session.
+      const session = await firstValueFrom(
+        this.http.post<CreateSessionResponse>(`${this.apiBase}/api/sessions`, {}),
+      );
       this.session.set(session);
       await this.connect(session.code);
     } catch (err) {
@@ -68,7 +76,11 @@ export class ControlService {
 
   private async connect(code: string): Promise<void> {
     const conn = new HubConnectionBuilder()
-      .withUrl(`${this.apiBase}${CONTROL_HUB_PATH}`)
+      .withUrl(`${this.apiBase}${CONTROL_HUB_PATH}`, {
+        // The controller authenticates to the hub; the token rides in the query
+        // string on the WebSocket handshake (the server reads it for /hubs/*).
+        accessTokenFactory: () => firstValueFrom(this.auth.getAccessTokenSilently()),
+      })
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Warning)
       .build();

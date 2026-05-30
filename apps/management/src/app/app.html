@@ -22,9 +22,25 @@
     <span class="status" role="status" aria-live="polite" [attr.data-status]="control.status()">
       <span class="sr-only">Connection: </span>{{ control.status() }}
     </span>
+
+    @if (authConfigured && !authLoading()) {
+      <div class="auth">
+        @if (isAuthenticated()) {
+          @if (userName()) { <span class="who" title="Signed in">{{ userName() }}</span> }
+          <button type="button" class="seg-btn" (click)="logout()">Log out</button>
+        } @else {
+          <button type="button" class="seg-btn" (click)="login()">Log in</button>
+        }
+      </div>
+    }
   </header>
 
-  @if (!control.session()) {
+  @if (authConfigured && !authLoading() && !isAuthenticated()) {
+    <section class="hero">
+      <p>Sign in as a clinician to start a session and control the headset light.</p>
+      <button class="primary" (click)="login()">Log in</button>
+    </section>
+  } @else if (!control.session()) {
     <section class="hero">
       <p>
         Create a session, then open the client on the headset phone — scan the QR code

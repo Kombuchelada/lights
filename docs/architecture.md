@@ -37,7 +37,7 @@ for accounts, billing, and saved protocols.
           ▼                                             ▼
         ┌───────────────────────────────────────────────────┐
         │     ASP.NET Core  —  /hubs/control + minimal API    │
-        │  in-memory session store (TTL)  ·  auth seam (none) │
+        │  in-memory session store (TTL)  ·  Auth0 JWT bearer │
         └───────────────────────────────────────────────────┘
 ```
 
@@ -125,9 +125,14 @@ This is **not** a medical device and makes no clinical claims.
 > The canonical, living roadmap is [`roadmap.md`](roadmap.md); the summary below
 > captures the seams this architecture deliberately leaves open.
 
-- **Auth (Auth0):** JWT bearer on the API + hub access token; Angular Auth0 SPA
-  SDK. Endpoints/hub are `[Authorize]`-ready; sessions become account-scoped
-  with optional persistent per-account room codes.
+- **Auth (Auth0) — ✅ done:** JWT bearer validation on the API (`Auth0__Domain` /
+  `Auth0__Audience`); the controller authenticates via the Angular Auth0 SPA SDK,
+  with the access token attached to `/api/*` (HTTP interceptor) and to the hub
+  (SignalR `accessTokenFactory`, read from the `access_token` query string for
+  `/hubs/*`). `POST /api/sessions` and the hub's **controller** role require auth;
+  the **client** role stays anonymous. Sessions are account-scoped to the
+  controller's `sub`. CORS is an env-driven allowlist (`Cors__AllowedOrigins`).
+  Deferred: RBAC/roles, custom auth domain, persistent per-account room codes.
 - **Persistence / profiles / folders:** swap the in-memory session store for
   EF Core (Postgres/SQL Server). Saved "protocols" reuse the `LightState` DTO;
   folders are owned entities.

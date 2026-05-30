@@ -52,9 +52,11 @@ item below.
   access* (`InMemorySessionStore`); there is no background GC, so an idle expired
   session lingers in memory until something next looks it up. Scale-out / a
   durable store is the persistence + scale work below.
-- **No authentication; dev CORS is wide-open.** Anyone with a code can join, and
-  the server allows any origin with credentials (`Program.cs`). Auth0 + a
-  locked-down CORS policy are on the SaaS roadmap.
+- ~~**No authentication; dev CORS is wide-open.**~~ ✅ **Resolved** — Auth0 now
+  gates the clinician (controller): JWT bearer on `POST /api/sessions` and the
+  hub's controller role, sessions account-scoped to the controller's `sub`, and
+  CORS narrowed to an env-driven allowlist. The headset client stays anonymous
+  code-join by design. See [`auth0.md`](auth0.md).
 
 ---
 
@@ -123,10 +125,11 @@ sweep) — logged in [`testing.md`](testing.md).
 Designed-for but not built. Phase 1 keeps the seams clean so these slot in
 without reworking the realtime core.
 
-- 💤 **Auth (Auth0).** JWT bearer on the API + a hub access token; Angular Auth0
-  SPA SDK; `[Authorize]` on endpoints/hub; account-scoped sessions + optional
-  persistent per-account room codes. Closes the "no auth / open CORS" limitation.
-  **Requirements + implementation plan: [`auth0.md`](auth0.md).**
+- ✅ **Auth (Auth0).** JWT bearer on the API + a hub access token; Angular Auth0
+  SPA SDK; session-create + controller hub role require auth; account-scoped
+  sessions by `sub`. Closed the "no auth / open CORS" limitation. Remaining
+  follow-ups (deferred): RBAC/roles, Auth0 custom domain `auth.lumessa.xyz`, and
+  persistent per-account room codes. **See [`auth0.md`](auth0.md).**
 - 💤 **Persistence / profiles / folders.** Swap `InMemorySessionStore` for EF
   Core (Postgres/SQL Server); saved "protocols" reuse the `LightState` DTO;
   folders as owned entities. Removes the volatile single-instance limitation.

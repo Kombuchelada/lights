@@ -1,10 +1,51 @@
 # Auth0 — requirements & implementation handoff
 
-Status: **not started** (no Auth0 account/tenant exists yet). This doc captures the
-decisions already made and the full plan so a fresh session can execute it.
-Closes the "no authentication; dev CORS wide-open" limitation in
-[`roadmap.md`](roadmap.md) and the `[Authorize]`-ready auth seam noted in
-[`architecture.md`](architecture.md).
+Status: **code complete; awaiting tenant values.** All the server and SPA wiring
+is implemented and the builds/tests are green. The only remaining steps are
+**user-side**: create the Auth0 tenant + apps and drop in the three public values
+(see [Going live](#going-live--what-the-user-must-do) below). Closes the
+"no authentication; dev CORS wide-open" limitation in [`roadmap.md`](roadmap.md)
+and the auth seam noted in [`architecture.md`](architecture.md).
+
+## What's implemented
+
+**Server** ([`Program.cs`](../server/Lights.Api/Program.cs), [`ControlHub.cs`](../server/Lights.Api/ControlHub.cs)):
+- `Microsoft.AspNetCore.Authentication.JwtBearer` added; JWT validation configured
+  from `Auth0__Domain` + `Auth0__Audience` (no-ops gracefully if unset, so dev
+  without a tenant still runs). `OnMessageReceived` reads `access_token` from the
+  query string for `/hubs/*` (SignalR handshake can't set an Authorization header).
+- `app.UseAuthentication()` / `UseAuthorization()` after `UseCors`.
+- `POST /api/sessions` is `.RequireAuthorization()`; `GET /api/sessions/{code}` and
+  `/healthz` stay anonymous.
+- The hub allows anonymous connections; inside `JoinSession`, `role == "controller"`
+  requires an authenticated user and a `sub` matching the session's `OwnerSub`
+  (stamped at create time). The `"client"` role stays open.
+- CORS narrowed from allow-all to an allowlist (`Cors__AllowedOrigins`, plus
+  built-in dev + `*.lumessa.xyz` defaults).
+
+**Management SPA** ([`app.config.ts`](../apps/management/src/app/app.config.ts),
+[`auth.config.ts`](../apps/management/src/app/auth.config.ts),
+[`control.service.ts`](../apps/management/src/app/control/control.service.ts), [`app.ts`](../apps/management/src/app/app.ts)):
+- `@auth0/auth0-angular` installed; `provideAuth0(...)` + `authHttpInterceptorFn`
+  (allowedList `/api/*`) registered. Refresh-token rotation + localStorage cache.
+- Session-create now goes through `HttpClient` (so the token is attached); the hub
+  gets `accessTokenFactory: () => firstValueFrom(auth.getAccessTokenSilently())`.
+- Top-bar Log in / Log out UI; "Start session" is gated behind login. Auth UI is
+  suppressed until real tenant values are present (`isAuthConfigured`), so dev
+  without a tenant is unaffected.
+
+## Going live — what the user must do
+
+1. Create the Auth0 account + **US** tenant, then the **SPA Application** + **API**
+   (resource server) and enable Google/Microsoft connections (details below).
+2. Put the three **public** values in
+   [`auth.config.ts`](../apps/management/src/app/auth.config.ts): `domain`,
+   `clientId`, `audience` (audience defaults to the proposed `https://api.lumessa.xyz`).
+3. Set the matching server env vars on the Railway `lights-server` service:
+   `Auth0__Domain` (e.g. `lumessa.us.auth0.com`) and `Auth0__Audience`
+   (= the API Identifier). Optionally `Cors__AllowedOrigins`.
+4. Register the SPA URLs in Auth0 (callback/logout/web-origin) for both
+   `https://app.lumessa.xyz` and `http://localhost:4200`.
 
 ## Goal
 

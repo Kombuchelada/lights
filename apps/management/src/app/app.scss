@@ -52,6 +52,27 @@ h1 {
   border-color: color-mix(in srgb, var(--warn) 40%, transparent);
 }
 
+/* Auth (login/logout) chip in the top bar */
+.auth {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth .who {
+  color: var(--muted);
+  font-size: 0.8rem;
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth .seg-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
 /* Segmented control (theme toggle, channel lock) */
 .seg {
   display: inline-flex;
