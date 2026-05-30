@@ -81,8 +81,9 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
 
 ## Deployed (live on Railway)
 - ✅ **Live in production** on Railway (runbook: `docs/deployment.md`; decision: `docs/adr/0001-hosting-on-railway.md`). US "color" spelling throughout.
-  - Controller: https://lights-management-production.up.railway.app
-  - Client (PWA): https://lights-client-production.up.railway.app
+  - Controller: https://app.lumessa.xyz
+  - Client (PWA): https://join.lumessa.xyz
+  - Apex `https://lumessa.xyz` 301-redirects to the controller. Custom domains on **Namecheap** (BasicDNS); see `docs/deployment.md` for the DNS records. The `*-production.up.railway.app` defaults are retired in favor of these.
   - Server: private (`lights-server.railway.internal:8080`); front-ends run **Caddy** proxying `/api`+`/hubs` over private networking (same-origin, no CORS).
 - **Deploys are Railway-native:** push to **`main`** → all three services auto-rebuild. Keep `main` aligned with the dev branch (`git branch -f main HEAD && git push origin main`). `.github/workflows/ci.yml` is a non-blocking gate (does not deploy).
 - **Railway MCP** is wired via `.mcp.json` (`https://mcp.railway.com`). On a new machine, authenticate once with `/mcp` → `railway` (OAuth, interactive client only). Project `lights` = `557f1afb-43e1-4dea-b4e3-6eb1878557c7`.

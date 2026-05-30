@@ -9,9 +9,9 @@ context = repo root; each service sets `RAILWAY_DOCKERFILE_PATH`):
 
 | Service | Dockerfile | Public? | URL |
 |---|---|---|---|
-| `lights-server` | `server/Dockerfile` | private | `*.up.railway.app` (health only) |
-| `lights-management` | `apps/management/Dockerfile` | public | `app.<domain>` |
-| `lights-client` | `apps/client/Dockerfile` | public | `go.<domain>` |
+| `lights-server` | `server/Dockerfile` | private | `lights-server.railway.internal:8080` (no public domain) |
+| `lights-management` | `apps/management/Dockerfile` | public | `app.lumessa.xyz` |
+| `lights-client` | `apps/client/Dockerfile` | public | `join.lumessa.xyz` |
 
 The two front-ends run **Caddy**, which serves the static bundle and
 reverse-proxies `/api` + `/hubs` to the server over Railway's private network.
@@ -24,9 +24,9 @@ it's reached privately at `lights-server.railway.internal:8080`.
 **`lights-server`**
 - `ASPNETCORE_URLS=http://[::]:8080` — bind IPv6 so both the public edge and the
   private network reach it; fixed port keeps the private origin stable.
-- `Client__BaseUrl=https://go.<domain>` — used to build the QR/join URL
-  (`Program.cs` reads `Client:BaseUrl`; `__` is the env form of `:`). Until the
-  custom domain is live, set this to the client's `*.up.railway.app` URL.
+- `Client__BaseUrl=https://join.lumessa.xyz` — used to build the QR/join URL
+  (`Program.cs` reads `Client:BaseUrl`; `__` is the env form of `:`). Before the
+  custom domain was live this pointed at the client's `*.up.railway.app` URL.
 - `RAILWAY_DOCKERFILE_PATH=server/Dockerfile`
 - Networking: target port **8080**; healthcheck path `/healthz`.
 
@@ -55,22 +55,37 @@ push to `main` and on every PR it runs:
 > with a repo secret `RAILWAY_TOKEN` (a Railway **project token**: Project →
 > Settings → Tokens).
 
-## Custom domain (Squarespace DNS)
+## Custom domain (Namecheap DNS)
 
-Squarespace supports **CNAME on subdomains** (not the apex), which suits the
-`app.`/`go.` scheme. For each public service: Railway → service → Settings →
-Networking → **Custom Domain** → enter `app.<domain>` (resp. `go.<domain>`),
-then add the **CNAME** record Railway shows in Squarespace
-(Settings → Domains → DNS):
+Live domain: **`lumessa.xyz`** (Namecheap BasicDNS — nameservers
+`dns1/dns2.registrar-servers.com`). Both public front-ends use **subdomains**
+(CNAME — no apex CNAME headache); the apex 301-redirects to the controller.
 
-| Host | Type | Value |
-|---|---|---|
-| `app` | CNAME | *(target Railway displays for lights-management)* |
-| `go`  | CNAME | *(target Railway displays for lights-client)* |
+For each public service: Railway → service → Settings → Networking → **Custom
+Domain** → enter `app.lumessa.xyz` (resp. `join.lumessa.xyz`). Railway shows a
+**CNAME target *and* a `_railway-verify` TXT record** — add **both** in Namecheap
+(Advanced DNS → Host Records; the Host field takes only the left label):
 
-Railway provisions + auto-renews TLS once the record resolves. After `go.<domain>`
-is live, set the server's `Client__BaseUrl=https://go.<domain>` so QR codes point
-at the real domain.
+| Host | Type | Value | Purpose |
+|---|---|---|---|
+| `app` | CNAME | *(target Railway shows for lights-management)* | controller |
+| `join` | CNAME | *(target Railway shows for lights-client)* | client PWA |
+| `_railway-verify.app` | TXT | `railway-verify=…` *(Railway shows it)* | domain verification |
+| `_railway-verify.join` | TXT | `railway-verify=…` *(Railway shows it)* | domain verification |
+| `@` | URL Redirect (301, unmasked) | `https://app.lumessa.xyz` | apex → controller |
+
+**Delete Namecheap's default parking records first** (`www` CNAME →
+`parkingpage.namecheap.com` and the apex URL-redirect), or they conflict with the
+apex redirect above. Railway provisions + auto-renews TLS once DNS resolves.
+After `join.lumessa.xyz` is live, set the server's
+`Client__BaseUrl=https://join.lumessa.xyz` so QR codes point at the real domain.
+
+> **Adding *and* removing domains is dashboard-only** — the Railway MCP/agent has
+> no tool to manage domains, so it can't mint CNAME targets or delete the default
+> `*.up.railway.app` domains. Removing the defaults is safe: the front-ends reach
+> the server over private networking and join URLs come from `Client__BaseUrl`.
+> (You *can* verify DNS from a shell — `dig @dns1.registrar-servers.com app.lumessa.xyz`
+> hits Namecheap's authoritative NS directly, bypassing propagation.)
 
 ## Let an agent drive it (Railway MCP)
 
@@ -110,8 +125,9 @@ Equivalent CLI setup (instead of editing `.mcp.json` by hand):
    (`ci.yml` runs the tests/builds in parallel as a visible gate.)
 4. Verify `lights-server` `/healthz`, open `lights-management`, start a session,
    scan the QR into `lights-client`, confirm realtime control.
-5. Set `Client__BaseUrl` to the client's `*.up.railway.app` URL so QR codes work
-   on the subdomains; revisit when a custom domain is added.
+5. Set `Client__BaseUrl=https://join.lumessa.xyz` so QR codes point at the real
+   domain (before the custom domain existed this was the client's
+   `*.up.railway.app` URL).
 
 ## Rollback
 
