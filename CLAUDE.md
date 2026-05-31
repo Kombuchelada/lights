@@ -41,6 +41,12 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
 
 ## Conventions
 - Branch: `claude/festive-ptolemy-cHoMr`. Commit footer: the session URL line. No model identifiers in artifacts.
+- **Controller CSS:** consume **design tokens** (`var(--…)`) — never hardcode a
+  color/spacing/radius/type value where a token exists. Tokens live in
+  `apps/management/src/styles.scss`; the full language + scales are in
+  `docs/design-system.md` (decision: `docs/adr/0002`). `npm run lint:css`
+  (stylelint) enforces this in CI, phased per axis (color now). The client PWA is
+  out of scope — it's a thin single-tool renderer.
 
 ## Status
 - ✅ **M0** scaffold + docs + protocol. ✅ **M1** realtime core. ✅ **Phase-1

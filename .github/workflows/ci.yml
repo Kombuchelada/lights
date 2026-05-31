@@ -34,3 +34,6 @@ jobs:
       - name: Build management
         working-directory: apps/management
         run: npm ci && npm run build
+      - name: Lint management CSS (design tokens)
+        working-directory: apps/management
+        run: npm run lint:css

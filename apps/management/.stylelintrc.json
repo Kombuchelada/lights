@@ -1,0 +1,40 @@
+{
+  "extends": "stylelint-config-standard-scss",
+  "plugins": ["stylelint-declaration-strict-value"],
+  "rules": {
+    "scale-unlimited/declaration-strict-value": [
+      ["/color$/", "fill", "stroke"],
+      {
+        "ignoreValues": [
+          "transparent",
+          "currentColor",
+          "inherit",
+          "initial",
+          "unset",
+          "none",
+          "dark",
+          "light",
+          "/^#(000|fff|0006)$/",
+          "/^rgba?\\(/",
+          "/color-mix\\(/",
+          "/repeating-linear-gradient/",
+          "/^linear-gradient/"
+        ],
+        "ignoreFunctions": true,
+        "disableFix": true,
+        "message": "Use a design token (var(--…)) instead of a raw color value — see docs/design-system.md"
+      }
+    ],
+    "comment-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "no-descending-specificity": null,
+    "selector-class-pattern": null,
+    "scss/comment-no-empty": null,
+    "scss/dollar-variable-empty-line-before": null,
+    "custom-property-empty-line-before": null,
+    "property-no-deprecated": null,
+    "property-no-vendor-prefix": null,
+    "value-no-vendor-prefix": null
+  },
+  "ignoreFiles": ["dist/**", "node_modules/**"]
+}

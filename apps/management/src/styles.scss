@@ -17,12 +17,47 @@
   --ok: #16a34a;
   --warn: #f59e0b;
   --danger: #ef4444;
+
+  /* --- Non-color scales (theme-independent; not overridden for light) --- */
+
+  /* Spacing rhythm — 4px base. Use for padding, margin, gap. Fixed control
+   * dimensions (button/swatch sizes) stay literal; this is layout rhythm. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Corner radius scale. `pill` for fully-rounded chips; 50% stays literal. */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  /* Type scale (rem, relative to the 16px root). */
+  --text-2xs: 0.7rem;
+  --text-xs: 0.78rem;
+  --text-sm: 0.85rem;
+  --text-base: 1rem;
+  --text-lg: 1.4rem;
+  --text-xl: 2.4rem;
+
+  /* Text/icons rendered over the filled accent surface. */
+  --on-accent: #fff;
+
+  /* RGB channel indicators — absolute colors, identical across themes. */
+  --chan-r: #ef4444;
+  --chan-g: #22c55e;
+  --chan-b: #3b82f6;
 }
 
 html[data-theme='light'] {
   color-scheme: light;
   --bg: #f6f7f9;
-  --panel: #ffffff;
+  --panel: #fff;
   --panel-2: #eef1f4;
   --text: #1a1d21;
   --muted: #5a6068;
