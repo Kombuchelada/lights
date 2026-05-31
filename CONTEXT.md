@@ -34,3 +34,21 @@ visual language. The concern is **cross-page visual consistency**, NOT agent
 familiarity with a CSS framework — so the chosen path must *enforce* a scale,
 not merely make CSS easier to write.
 _Avoid_: conflating with "agent legibility"
+
+### Token enforcement
+The mechanism that keeps the design system from drifting: a stylelint rule
+(`stylelint-declaration-strict-value`) that flags raw values where a token
+exists, paired with a human-readable `docs/design-system.md`. Adopted
+**phased** — color enforcement first (zero refactor debt), then radius,
+spacing, and type each tokenized + adopted before its rule is tightened, so CI
+never becomes a wall of red. Lives in the CI `build-frontends` job (non-blocking
+gate: drift is visible, but does not block the Railway deploy).
+_Avoid_: "the linter" (ambiguous — Angular/TS also lint)
+
+### Component patterns
+Reusable controller UI primitives (`.card`, `.field`, `.seg-btn`, `.swatch`,
+`.hint`, `.step-btn`…). Today trapped inside `app-root`'s emulated-encapsulation
+styles, so a new page cannot reuse them. Making them shareable is part of the
+design-system work and is **separate from tokens** — tokens fix values,
+component patterns fix structure.
+_Avoid_: components (collides with Angular `@Component`)
