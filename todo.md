@@ -9,3 +9,9 @@ It looks like we're using lots of handcrafted CSS which is beautifully specific 
 1. Continue with handcrafted CSS, but maintain it with a broader, site-wide concept to ensure consistent styling across pages that are to come. I have concerns about the ability of future agent sessions to fully grok our site's specific CSS without being trained on it, like how agents are trained to use tools like bootstrap or tailwind natively.
 2. Switch to a popular library like Bootstrap or Tailwind, and add our own theming to it.
 3. something else entirely?
+
+# Tutorial
+The site should have a tutorial to describe all of the features to users
+
+# Animations
+Take a look through the functionality and suggest places that we might add a little bit of CSS animation/transitions to improve the UX. The intention here is to make the site slightly more usable by using animations/transitions to inform users subtly about things moving around on the site.
