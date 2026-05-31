@@ -1,7 +1,7 @@
-using Lights.Core;
+using Lumessa.Core;
 using Xunit;
 
-namespace Lights.Core.Tests;
+namespace Lumessa.Core.Tests;
 
 public class ProtocolLimitsTests
 {

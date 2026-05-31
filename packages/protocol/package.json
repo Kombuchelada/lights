@@ -1,8 +1,8 @@
 {
-  "name": "@lights/protocol",
+  "name": "@lumessa/protocol",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared wire-protocol types and constants for the Lights light-control system. Hand-kept in sync with the C# DTOs in server/Lights.Core.",
+  "description": "Shared wire-protocol types and constants for the Lumessa light-control system. Hand-kept in sync with the C# DTOs in server/Lumessa.Core.",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",

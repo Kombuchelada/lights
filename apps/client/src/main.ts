@@ -2,7 +2,7 @@ import './styles.css';
 import { ClientConnection, type ConnectionStatus } from './connection';
 import { Renderer } from './renderer';
 import { QrScanner, codeFromScan } from './scanner';
-import type { LightState } from '@lights/protocol';
+import type { LightState } from '@lumessa/protocol';
 
 const apiBase = (import.meta.env.VITE_API_BASE ?? '').toString();
 

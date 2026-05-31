@@ -1,6 +1,18 @@
-<main class="shell">
+<main class="shell" [class.compact]="view.compact()">
   <header class="topbar">
-    <h1>Lights <span class="sub">Controller</span></h1>
+    <h1>Lumessa <span class="sub">Controller</span></h1>
+
+    <button
+      type="button"
+      class="icon-toggle"
+      [class.on]="view.compact()"
+      [attr.aria-pressed]="view.compact()"
+      title="Compact view — denser controls, icon labels"
+      aria-label="Compact view"
+      (click)="toggleCompact()"
+    >
+      <span aria-hidden="true">▤</span>
+    </button>
 
     <div class="seg theme-toggle" role="radiogroup" aria-label="Theme">
       @for (opt of themeOptions; track opt.value) {
@@ -51,7 +63,8 @@
       </button>
     </section>
   } @else {
-    <section class="code-card">
+    <div class="topdeck">
+    <section class="code-card" [class.slim]="control.clientConnected()">
       <app-qr [value]="control.session()!.joinUrl" />
       <div class="code-main">
         <span class="label">Session code</span>
@@ -119,10 +132,26 @@
         <span class="badge badge-sweep">↔ {{ sweepHz() }} Hz</span>
       }
     </div>
+    </div>
 
-    <div class="stack">
-      <section class="card">
-        <h2>Color</h2>
+    <div class="cardcol">
+      <div class="toolbar">
+        <button type="button" class="link" (click)="expandAll()" [disabled]="!view.anyCollapsed()">Expand all</button>
+        <button type="button" class="link" (click)="collapseAll()" [disabled]="view.allCollapsed()">Collapse all</button>
+      </div>
+
+      <div class="cards">
+      <section class="card" [class.collapsed]="view.isCollapsed('color')">
+        <header class="card-head">
+          <h2 class="card-title">
+            <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('color')" (click)="toggleCard('color')">
+              <span class="chevron" aria-hidden="true">▾</span>
+              Color
+            </button>
+          </h2>
+          <span class="summary"><span class="summary-swatch" [style.background]="hex()"></span>{{ hex() }}</span>
+        </header>
+        <div class="card-body">
 
         <div class="presets">
           @for (preset of presets; track preset.label) {
@@ -164,8 +193,8 @@
           <span class="hint">Save stashes the current color; M1–M4 recall it. Cleared when you reload.</span>
         </div>
 
-        <div class="field">
-          <span class="label">Red <em>{{ color().r }}</em></span>
+        <div class="field" title="Red">
+          <span class="label"><span class="lbl-icon chan-icon-r" aria-hidden="true">R</span><span class="lbl-text">Red</span> <em>{{ color().r }}</em></span>
           <div class="slider-row">
             <button type="button" class="step-btn" (click)="stepChannel('r', -1)" aria-label="Decrease red by 1">−</button>
             <input
@@ -180,8 +209,8 @@
             <button type="button" class="step-btn" (click)="stepChannel('r', 1)" aria-label="Increase red by 1">+</button>
           </div>
         </div>
-        <div class="field">
-          <span class="label">Green <em>{{ color().g }}</em></span>
+        <div class="field" title="Green">
+          <span class="label"><span class="lbl-icon chan-icon-g" aria-hidden="true">G</span><span class="lbl-text">Green</span> <em>{{ color().g }}</em></span>
           <div class="slider-row">
             <button type="button" class="step-btn" (click)="stepChannel('g', -1)" aria-label="Decrease green by 1">−</button>
             <input
@@ -196,8 +225,8 @@
             <button type="button" class="step-btn" (click)="stepChannel('g', 1)" aria-label="Increase green by 1">+</button>
           </div>
         </div>
-        <div class="field">
-          <span class="label">Blue <em>{{ color().b }}</em></span>
+        <div class="field" title="Blue">
+          <span class="label"><span class="lbl-icon chan-icon-b" aria-hidden="true">B</span><span class="lbl-text">Blue</span> <em>{{ color().b }}</em></span>
           <div class="slider-row">
             <button type="button" class="step-btn" (click)="stepChannel('b', -1)" aria-label="Decrease blue by 1">−</button>
             <input
@@ -213,8 +242,8 @@
           </div>
         </div>
 
-        <div class="field">
-          <span class="label">Channel lock</span>
+        <div class="field" title="Channel lock">
+          <span class="label"><span class="lbl-icon" aria-hidden="true">🔒</span><span class="lbl-text">Channel lock</span></span>
           <div class="seg" role="radiogroup" aria-label="Lock color channels together">
             @for (opt of lockOptions; track opt.value) {
               <button
@@ -232,9 +261,9 @@
           <span class="hint">Locked channels move together when you drag any one of them.</span>
         </div>
 
-        <div class="field">
+        <div class="field" title="Wavelength">
           <span class="label">
-            Wavelength <em>{{ wavelength() }} nm</em>
+            <span class="lbl-icon" aria-hidden="true">🌈</span><span class="lbl-text">Wavelength</span> <em>{{ wavelength() }} nm</em>
             @if (usingWavelength()) { <span class="tag">spectral</span> }
           </span>
           <div class="slider-row">
@@ -255,12 +284,22 @@
             Editing RGB switches back to manual color.
           </span>
         </div>
+        </div>
       </section>
 
-      <section class="card">
-        <h2>Light</h2>
-        <label class="field">
-          <span class="label">Brightness <em>{{ brightnessPct() }}%</em></span>
+      <section class="card" [class.collapsed]="view.isCollapsed('light')">
+        <header class="card-head">
+          <h2 class="card-title">
+            <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('light')" (click)="toggleCard('light')">
+              <span class="chevron" aria-hidden="true">▾</span>
+              Light
+            </button>
+          </h2>
+          <span class="summary">{{ brightnessPct() }}% · {{ radiusPct() }}%</span>
+        </header>
+        <div class="card-body">
+        <label class="field" title="Brightness">
+          <span class="label"><span class="lbl-icon" aria-hidden="true">☀</span><span class="lbl-text">Brightness</span> <em>{{ brightnessPct() }}%</em></span>
           <input
             type="range"
             min="0"
@@ -270,8 +309,8 @@
             aria-label="Brightness percent"
           />
         </label>
-        <label class="field">
-          <span class="label">Size <em>{{ radiusPct() }}%</em></span>
+        <label class="field" title="Size">
+          <span class="label"><span class="lbl-icon" aria-hidden="true">⊙</span><span class="lbl-text">Size</span> <em>{{ radiusPct() }}%</em></span>
           <input
             type="range"
             min="0"
@@ -281,13 +320,21 @@
             aria-label="Light size percent"
           />
         </label>
+        </div>
       </section>
 
-      <section class="card">
-        <div class="row">
-          <h2 style="margin: 0">Position</h2>
+      <section class="card" [class.collapsed]="view.isCollapsed('position')">
+        <header class="card-head">
+          <h2 class="card-title">
+            <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('position')" (click)="toggleCard('position')">
+              <span class="chevron" aria-hidden="true">▾</span>
+              Position
+            </button>
+          </h2>
+          <span class="summary">{{ xPct() }}, {{ yPct() }}</span>
           <button type="button" class="link" (click)="center()">Center</button>
-        </div>
+        </header>
+        <div class="card-body">
         <label class="sub-field">
           <span>X</span>
           <input
@@ -310,10 +357,20 @@
             [attr.aria-label]="'Vertical position, ' + yPct() + ' percent'"
           />
         </label>
+        </div>
       </section>
 
-      <section class="card">
-        <h2>Stereo / VR</h2>
+      <section class="card" [class.collapsed]="view.isCollapsed('stereo')">
+        <header class="card-head">
+          <h2 class="card-title">
+            <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('stereo')" (click)="toggleCard('stereo')">
+              <span class="chevron" aria-hidden="true">▾</span>
+              Stereo / VR
+            </button>
+          </h2>
+          <span class="summary">{{ mode() }}</span>
+        </header>
+        <div class="card-body">
         <div class="field">
           <span class="label">Render mode</span>
           <div class="seg" role="radiogroup" aria-label="Stereo render mode">
@@ -439,17 +496,28 @@
             />
           </label>
         }
+        </div>
       </section>
 
-      <section class="card">
-        <div class="row">
-          <h2 style="margin: 0">Flicker</h2>
+      <section class="card" [class.collapsed]="view.isCollapsed('flicker')">
+        <header class="card-head">
+          <h2 class="card-title">
+            <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('flicker')" (click)="toggleCard('flicker')">
+              <span class="chevron" aria-hidden="true">▾</span>
+              Flicker
+            </button>
+          </h2>
+          <span class="summary" [class.risk]="flickerRisk() !== 'none'">
+            {{ flickerHz() > 0 ? flickerHz() + ' Hz' : 'Off' }}
+            @if (flickerRisk() !== 'none') { ⚠ }
+          </span>
           @if (flickerHz() > 0) {
             <button type="button" class="link" (click)="stopFlicker()">Stop</button>
           }
-        </div>
-        <label class="field">
-          <span class="label">Frequency <em>{{ flickerHz() }} Hz</em></span>
+        </header>
+        <div class="card-body">
+        <label class="field" title="Frequency">
+          <span class="label"><span class="lbl-icon" aria-hidden="true">⚡</span><span class="lbl-text">Frequency</span> <em>{{ flickerHz() }} Hz</em></span>
           <input
             class="flicker"
             [class.risk-high]="flickerRisk() === 'high'"
@@ -476,15 +544,26 @@
             </p>
           }
         </div>
+        </div>
       </section>
 
-      <section class="card">
-        <div class="row">
-          <h2 style="margin: 0">A/B background</h2>
+      <section class="card" [class.collapsed]="view.isCollapsed('ab')">
+        <header class="card-head">
+          <h2 class="card-title">
+            <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('ab')" (click)="toggleCard('ab')">
+              <span class="chevron" aria-hidden="true">▾</span>
+              A/B background
+            </button>
+          </h2>
+          <span class="summary" [class.risk]="abRisk() !== 'none'">
+            {{ abHz() > 0 ? abHz() + ' Hz' : 'Off' }}
+            @if (abRisk() !== 'none') { ⚠ }
+          </span>
           @if (abHz() > 0) {
             <button type="button" class="link" (click)="stopAb()">Stop</button>
           }
-        </div>
+        </header>
+        <div class="card-body">
         <div class="presets">
           <input
             type="color"
@@ -522,15 +601,23 @@
             </p>
           }
         </div>
+        </div>
       </section>
 
-      <section class="card">
-        <div class="row">
-          <h2 style="margin: 0">Sweep (KITT)</h2>
+      <section class="card" [class.collapsed]="view.isCollapsed('sweep')">
+        <header class="card-head">
+          <h2 class="card-title">
+            <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('sweep')" (click)="toggleCard('sweep')">
+              <span class="chevron" aria-hidden="true">▾</span>
+              Sweep (KITT)
+            </button>
+          </h2>
+          <span class="summary">{{ sweeping() ? sweepHz() + ' Hz' : 'Off' }}</span>
           @if (sweeping()) {
             <button type="button" class="link" (click)="stopSweep()">Stop</button>
           }
-        </div>
+        </header>
+        <div class="card-body">
         <label class="field">
           <span class="label">Rate <em>{{ sweepHz() }} Hz</em></span>
           <input
@@ -576,7 +663,9 @@
           />
           <span class="hint">How far the light travels from its base position.</span>
         </label>
+        </div>
       </section>
+      </div>
     </div>
   }
 </main>

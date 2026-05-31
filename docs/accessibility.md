@@ -1,4 +1,4 @@
-# Accessibility — Lights
+# Accessibility — Lumessa
 
 The M7 a11y audit of the **controller** (`apps/management`) and **client**
 (`apps/client`), the fixes it produced, and the manual checklist for keeping

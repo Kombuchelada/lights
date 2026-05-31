@@ -1,6 +1,6 @@
-# Lights — Wire Protocol (v2)
+# Lumessa — Wire Protocol (v2)
 
-The contract shared by the server (C# DTOs in `server/Lights.Core`), the
+The contract shared by the server (C# DTOs in `server/Lumessa.Core`), the
 management controller, and the client screen. The TypeScript source of truth is
 [`packages/protocol/src/index.ts`](../packages/protocol/src/index.ts); the C#
 DTOs are hand-kept in sync.

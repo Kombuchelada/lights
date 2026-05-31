@@ -13,7 +13,7 @@
     "noUnusedParameters": true,
     "baseUrl": ".",
     "paths": {
-      "@lights/protocol": ["../../packages/protocol/src/index.ts"]
+      "@lumessa/protocol": ["../../packages/protocol/src/index.ts"]
     }
   },
   "include": ["src"]

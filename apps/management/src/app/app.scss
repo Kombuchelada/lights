@@ -144,6 +144,10 @@ button.primary:disabled {
   gap: var(--space-5);
   align-items: center;
   margin-bottom: var(--space-5);
+  /* Sit above the (positioned) preview so a wide session code that overflows
+     its column spills *over* the preview rather than behind it. */
+  position: relative;
+  z-index: 1;
 }
 
 .code-main {
@@ -232,7 +236,7 @@ button.primary:disabled {
 }
 
 .card h2 {
-  margin: 0 0 var(--space-4);
+  margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
 }
@@ -583,5 +587,248 @@ input[type="color"] {
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
+  }
+}
+
+/* ── Compact-view topbar toggle ───────────────────────────────────────── */
+.icon-toggle {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  border-radius: var(--radius-pill);
+  width: 34px;
+  height: 30px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.icon-toggle.on {
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
+  color: var(--on-accent);
+}
+
+/* ── Slim session bar once a client is connected ──────────────────────── */
+.code-card.slim {
+  grid-template-columns: 1fr;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+}
+
+.code-card.slim app-qr,
+.code-card.slim .join {
+  display: none;
+}
+
+.code-card.slim .code-main {
+  flex-flow: row wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+}
+
+.code-card.slim .code {
+  font-size: 1.4rem;
+  letter-spacing: 0.18em;
+}
+
+/* ── Top deck: session/QR card + live preview, side by side on wide screens.
+   Keeps the preview up top with the join info and lets the cards below use the
+   full width (more masonry columns). ──────────────────────────────────────── */
+.topdeck {
+  display: block;
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: flex-end;
+  margin-bottom: var(--space-3);
+}
+
+.toolbar .link {
+  margin-left: 0;
+}
+
+.toolbar .link:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Masonry-style packing via CSS multi-column (native masonry isn't shipped).
+   Cards keep natural height; avoid splitting one across columns. NB: the
+   eye-targeting picker also uses `.grid` — this is deliberately `.cards`. */
+.cards {
+  column-width: 340px;
+  column-gap: var(--space-4);
+}
+
+.cards > .card {
+  break-inside: avoid;
+  margin: 0 0 var(--space-4);
+}
+
+/* ── Collapsible card head (heading-wraps-button accordion pattern) ────── */
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 14px;
+}
+
+.card-title {
+  margin: 0;
+}
+
+.card-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.card-toggle .chevron {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  transition: transform 0.15s ease;
+}
+
+/* Live summary — shown only when the card is collapsed. */
+.summary {
+  margin-left: auto;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary.risk {
+  color: var(--warn);
+}
+
+.summary-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.card.collapsed .summary {
+  display: flex;
+}
+
+.card.collapsed .card-head {
+  margin-bottom: 0;
+}
+
+.card.collapsed .card-toggle .chevron {
+  transform: rotate(-90deg);
+}
+
+.card.collapsed .card-body {
+  display: none;
+}
+
+/* ── Label icon/text swap (text by default, icon in compact) ──────────── */
+.lbl-icon {
+  display: none;
+  font-weight: 600;
+}
+
+.chan-icon-r {
+  color: var(--chan-r);
+}
+
+.chan-icon-g {
+  color: var(--chan-g);
+}
+
+.chan-icon-b {
+  color: var(--chan-b);
+}
+
+/* ── Compact view: tighter spacing, icon labels, hints hidden ─────────── */
+.compact .card {
+  padding: 12px 14px;
+}
+
+.compact .card-head {
+  margin-bottom: 10px;
+}
+
+.compact .cards > .card {
+  margin-bottom: 12px;
+}
+
+.compact .field {
+  gap: 5px;
+}
+
+.compact .field + .field {
+  margin-top: 10px;
+}
+
+.compact .presets,
+.compact .memory {
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.compact .swatch {
+  width: 26px;
+  height: 26px;
+}
+
+/* Swap text labels for icons where provided; full text stays in the field's
+   title + the control's aria-label. Hints are convenience only — reclaim
+   their height. Safety warnings (.warn) are never touched. */
+.compact .lbl-text {
+  display: none;
+}
+
+.compact .lbl-icon {
+  display: inline;
+}
+
+.compact .hint {
+  display: none;
+}
+
+/* Denser columns when compact lets more cards fit side by side. */
+.compact .cards {
+  column-width: 280px;
+}
+
+/* ── Medium+ screens: pair the session card with the preview in two columns. */
+@media (width >= 760px) {
+  .topdeck {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    margin-bottom: 20px;
+  }
+
+  .topdeck > .code-card,
+  .topdeck > .preview {
+    margin-bottom: 0;
+  }
+}
+
+/* ── Wide screens: expand the shell so the full-width card grid gets more
+   masonry columns (the preview no longer occupies a side rail). ─────────── */
+@media (width >= 900px) {
+  .shell {
+    max-width: 1240px;
   }
 }

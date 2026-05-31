@@ -1,4 +1,4 @@
-namespace Lights.Core;
+namespace Lumessa.Core;
 
 /// <summary>
 /// Authoritative limits and the <see cref="Sanitize"/> routine for incoming

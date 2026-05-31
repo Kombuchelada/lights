@@ -1,4 +1,4 @@
-namespace Lights.Core;
+namespace Lumessa.Core;
 
 /// <summary>sRGB color channels, each 0–255.</summary>
 public sealed record Rgb

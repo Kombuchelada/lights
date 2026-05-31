@@ -3,7 +3,7 @@ import { Injectable, computed, effect, signal } from '@angular/core';
 /** User-selectable theme. `system` follows the OS `prefers-color-scheme`. */
 export type ThemeMode = 'system' | 'light' | 'dark';
 
-const STORAGE_KEY = 'lights.theme';
+const STORAGE_KEY = 'lumessa.theme';
 
 /**
  * Signal-driven theming. Persists the chosen {@link ThemeMode}, tracks the OS

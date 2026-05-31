@@ -23,7 +23,7 @@ server validates against **both** the custom-domain and default-tenant issuers
 
 ## What's implemented
 
-**Server** ([`Program.cs`](../server/Lights.Api/Program.cs), [`ControlHub.cs`](../server/Lights.Api/ControlHub.cs)):
+**Server** ([`Program.cs`](../server/Lumessa.Api/Program.cs), [`ControlHub.cs`](../server/Lumessa.Api/ControlHub.cs)):
 - `Microsoft.AspNetCore.Authentication.JwtBearer` added; JWT validation configured
   from `Auth0__Domain` + `Auth0__Audience` (no-ops gracefully if unset, so dev
   without a tenant still runs). `OnMessageReceived` reads `access_token` from the
@@ -132,7 +132,7 @@ Clinician → Angular SPA (auth0-angular, domain = login.lumessa.xyz)
 - **Same-origin in prod:** Caddy proxies `/api`+`/hubs` same-origin, so CORS isn't
   exercised in production; it only matters in dev (`:4200` → `:5000`).
 
-## The hub auth nuance (important — read [`ControlHub`](../server/Lights.Api/ControlHub.cs))
+## The hub auth nuance (important — read [`ControlHub`](../server/Lumessa.Api/ControlHub.cs))
 
 The controller and the anonymous client **share one hub**; `JoinSession(code, role)`
 takes a `role` of `"controller"` or `"client"`. So **do NOT** put a blanket
@@ -147,7 +147,7 @@ Instead:
 - Recommended: stamp the session with the controller's `sub` at create time and
   verify it on controller join, so sessions are truly account-scoped.
 
-For the HTTP endpoints in [`Program.cs`](../server/Lights.Api/Program.cs):
+For the HTTP endpoints in [`Program.cs`](../server/Lumessa.Api/Program.cs):
 - `POST /api/sessions` (create) → **`[Authorize]`** / `.RequireAuthorization()`
   — only clinicians create sessions.
 - `GET /api/sessions/{code}` (existence check) → **anonymous** — the client uses it.
@@ -155,7 +155,7 @@ For the HTTP endpoints in [`Program.cs`](../server/Lights.Api/Program.cs):
 
 ## Implementation tasks
 
-### Server (`server/Lights.Api`)
+### Server (`server/Lumessa.Api`)
 1. Add package `Microsoft.AspNetCore.Authentication.JwtBearer`.
 2. `AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(...)`
    with `Authority = $"https://{Auth0__Domain}/"`, `Audience = Auth0__Audience`.
@@ -218,8 +218,8 @@ authenticate via `/mcp`. Not required — the dashboard path works fine.
 
 ## Reference files
 
-- [`server/Lights.Api/Program.cs`](../server/Lights.Api/Program.cs) — DI, **dev CORS**, endpoints, `MapHub`.
-- [`server/Lights.Api/ControlHub.cs`](../server/Lights.Api/ControlHub.cs) — `JoinSession`/`SendState` (the role split).
+- [`server/Lumessa.Api/Program.cs`](../server/Lumessa.Api/Program.cs) — DI, **dev CORS**, endpoints, `MapHub`.
+- [`server/Lumessa.Api/ControlHub.cs`](../server/Lumessa.Api/ControlHub.cs) — `JoinSession`/`SendState` (the role split).
 - [`apps/management/src/app/control/control.service.ts`](../apps/management/src/app/control/control.service.ts) — Angular SignalR client (`withUrl`).
 - [`docs/architecture.md`](architecture.md) — auth seam (§ Future work).
 - [`docs/roadmap.md`](roadmap.md) — SaaS roadmap Auth0 item.

@@ -1,4 +1,4 @@
-namespace Lights.Core;
+namespace Lumessa.Core;
 
 /// <summary>A controller↔client pairing. Connection ids and last state are set by the hub.</summary>
 public sealed class Session

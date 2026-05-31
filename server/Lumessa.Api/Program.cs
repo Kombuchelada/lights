@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Lights.Api;
-using Lights.Core;
+using Lumessa.Api;
+using Lumessa.Core;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -88,7 +88,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 // from other origins. In prod, Caddy serves the front-ends same-origin so CORS
 // isn't exercised — but we keep a tight allowlist regardless. Origins come from
 // the Cors__AllowedOrigins env var (comma/space-separated); dev defaults included.
-const string CorsPolicy = "lights-cors";
+const string CorsPolicy = "lumessa-cors";
 var allowedOrigins = (builder.Configuration["Cors:AllowedOrigins"] ?? string.Empty)
     .Split([',', ' ', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
     .Concat(["http://localhost:4200", "http://localhost:5173", "https://app.lumessa.xyz", "https://join.lumessa.xyz"])

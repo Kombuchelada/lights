@@ -1,4 +1,4 @@
-# Lights
+# Lumessa
 
 Realtime light-control for a phone-in-a-headset stimulus, with a modern,
 accessible web controller (clinician controller) + client screen.
@@ -23,9 +23,9 @@ See [`docs/architecture.md`](docs/architecture.md) for the full design and
 
 ```
 /server              ASP.NET Core solution (built locally with the .NET SDK)
-  Lights.Api         minimal API host + SignalR ControlHub + session store
-  Lights.Core        domain: LightState DTOs, session model, wavelength util
-  Lights.Api.Tests   xUnit tests for the core logic
+  Lumessa.Api         minimal API host + SignalR ControlHub + session store
+  Lumessa.Core        domain: LightState DTOs, session model, wavelength util
+  Lumessa.Api.Tests   xUnit tests for the core logic
 /apps
   /management        Angular (zoneless, signals, standalone) controller
   /client            vanilla TS + Vite canvas PWA (the headset screen)
@@ -49,7 +49,7 @@ Three terminals:
 
 ```bash
 # 1) Server (https://localhost:5001) — needs the .NET SDK
-cd server && dotnet run --project Lights.Api
+cd server && dotnet run --project Lumessa.Api
 
 # 2) Management controller (http://localhost:4200)
 cd apps/management && npm install && npm start

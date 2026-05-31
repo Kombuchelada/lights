@@ -1,4 +1,4 @@
-# CLAUDE.md — Lights
+# CLAUDE.md — Lumessa
 
 Realtime light-control for a phone-in-a-headset stimulus. A clinician
 **controller** drives a colored light on a headset **client** screen in realtime.
@@ -6,7 +6,7 @@ Eventual SaaS (Auth0, Stripe, profiles, folders) — deferred; Phase 1 is the
 working light-control prototype.
 
 ## Layout
-- `server/` — ASP.NET Core (net10.0) minimal API + **SignalR** `ControlHub`; `Lights.Core` (DTOs, sessions, wavelength), `Lights.Api.Tests` (xUnit).
+- `server/` — ASP.NET Core (net10.0) minimal API + **SignalR** `ControlHub`; `Lumessa.Core` (DTOs, sessions, wavelength), `Lumessa.Api.Tests` (xUnit).
 - `apps/management/` — Angular 21 **zoneless, signals** controller.
 - `apps/client/` — vanilla TS + Vite **PWA**, pure-black canvas renderer.
 - `packages/protocol/` — shared TS types/limits; **mirrors the C# DTOs**.
@@ -15,7 +15,7 @@ working light-control prototype.
 
 ## Run (dev)
 ```
-cd server && dotnet run --project Lights.Api      # http :5000, https :5001
+cd server && dotnet run --project Lumessa.Api      # http :5000, https :5001
 cd apps/management && npm start                   # :4200, proxies → :5000
 cd apps/client && npm run dev                      # :5173, proxies → :5000
 ```
@@ -26,7 +26,7 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   `packages.microsoft.com` via apt (`dotnet-sdk-10.0`). NuGet (`api.nuget.org`) is reachable.
 - Drop to `net9.0` in the `.csproj`s if only .NET 9 is installed.
 - JSON is **camelCase** on both SignalR and HTTP (configured in `Program.cs`).
-- TS apps import `@lights/protocol` via a **tsconfig/vite path alias** to its `src` (no build step).
+- TS apps import `@lumessa/protocol` via a **tsconfig/vite path alias** to its `src` (no build step).
 - Geometry is **normalized 0..1**; brightness is the circle's **alpha**; flicker
   is rendered client-side from `flickerHz` (gated by a consent prompt).
 - Server is authoritative: all state runs through `ProtocolLimits.Sanitize`.
@@ -37,7 +37,7 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
 - **Client escape hatch:** standalone PWA has no address bar, so **long-press the
   canvas** summons the join overlay (Resume / Reload / re-join); the overlay also
   auto-shows when the controller or session drops (`onControllerLeft`/`onSessionEnded`).
-- `pkill -f "Lights.Api"` self-matches the shell if the pattern is in the script — kill by port (`fuser -k 5000/tcp`) instead.
+- `pkill -f "Lumessa.Api"` self-matches the shell if the pattern is in the script — kill by port (`fuser -k 5000/tcp`) instead.
 
 ## Conventions
 - Branch: `claude/festive-ptolemy-cHoMr`. Commit footer: the session URL line. No model identifiers in artifacts.
@@ -54,7 +54,7 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   lock, wavelength (nm) picker, brightness/size, X/Y position, flicker + high-risk
   warning, live preview, QR join code, light/dark/system theme (defaults system),
   baseline a11y. Verified: management build clean + 5/5 unit tests; server 20/20.
-  Controller theming/QR via `@lights/protocol` + the `qrcode` dep (allowed CommonJS).
+  Controller theming/QR via `@lumessa/protocol` + the `qrcode` dep (allowed CommonJS).
   Client join: type code, `?code=` URL, **or in-app camera QR scan** (`scanner.ts`;
   native `BarcodeDetector` with a lazy-loaded `jsqr` fallback for iOS — needs HTTPS).
 - ✅ **M7 complete:** docs polish; deeper a11y audit (radiogroup roving-tabindex/arrow

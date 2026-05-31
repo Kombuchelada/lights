@@ -15,7 +15,7 @@
     "target": "ES2022",
     "module": "preserve",
     "paths": {
-      "@lights/protocol": ["../../packages/protocol/src/index.ts"]
+      "@lumessa/protocol": ["../../packages/protocol/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

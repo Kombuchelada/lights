@@ -1,5 +1,5 @@
 {
-  "name": "lights",
+  "name": "lumessa",
   "version": "0.1.0",
   "private": true,
   "description": "Realtime light-control for a phone-in-a-headset stimulus, with a modern accessible web controller.",

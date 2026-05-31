@@ -1,4 +1,4 @@
-# Roadmap — Lights
+# Roadmap — Lumessa
 
 The living feature list: what's built, what's next, and what's deliberately
 deferred. Read it with [`architecture.md`](architecture.md) (design) and

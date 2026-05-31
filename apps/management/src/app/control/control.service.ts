@@ -17,7 +17,7 @@ import {
   type CreateSessionResponse,
   type LightState,
   type StateRendered,
-} from '@lights/protocol';
+} from '@lumessa/protocol';
 
 export type ConnStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
 

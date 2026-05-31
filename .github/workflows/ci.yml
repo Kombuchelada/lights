@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - run: dotnet test server/Lights.sln -c Release --nologo
+      - run: dotnet test server/Lumessa.sln -c Release --nologo
 
   build-frontends:
     runs-on: ubuntu-latest

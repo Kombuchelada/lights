@@ -5,8 +5,9 @@ import { of } from 'rxjs';
 import { App } from './app';
 
 // Minimal AuthService stub: the controller is treated as unauthenticated and the
-// token factory is never exercised in these unit tests. (Auth UI is also gated on
-// `isAuthConfigured`, which is false while placeholder tenant values are in place.)
+// token factory is never exercised in these unit tests. (Auth UI is gated on
+// `isAuthConfigured`, which is false in local dev — incl. the jsdom test host
+// `localhost` — so the controller is reachable without a tenant login.)
 const authStub: Partial<AuthService> = {
   isLoading$: of(false),
   isAuthenticated$: of(false),
@@ -27,14 +28,26 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('gates session start behind login when unauthenticated', async () => {
-    // Auth0 is configured (real tenant values), and the stub is unauthenticated,
-    // so the primary CTA is "Log in" — "Start session" only appears post-login.
+  it('reaches the session CTA directly in local dev (Auth0 bypassed on localhost)', async () => {
+    // On localhost (incl. the jsdom test host) `isAuthConfigured` is false, so the
+    // controller is not gated behind login — the primary CTA is "Start session".
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(text).toContain('Log in');
-    expect(text).not.toContain('Start session');
+    expect(text).toContain('Start session');
+    expect(text).not.toContain('Log in');
+  });
+
+  it('reflects the compact toggle onto the shell class', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const shell = (fixture.nativeElement as HTMLElement).querySelector('.shell')!;
+    expect(shell.classList.contains('compact')).toBe(false);
+
+    (fixture.componentInstance as unknown as { toggleCompact(): void }).toggleCompact();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(shell.classList.contains('compact')).toBe(true);
   });
 
   it('moves locked channels together when one is dragged', () => {

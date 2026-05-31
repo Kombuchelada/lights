@@ -14,7 +14,7 @@ const https = cert && key ? { cert: readFileSync(cert), key: readFileSync(key) }
 export default defineConfig({
   resolve: {
     alias: {
-      '@lights/protocol': fileURLToPath(new URL('../../packages/protocol/src/index.ts', import.meta.url)),
+      '@lumessa/protocol': fileURLToPath(new URL('../../packages/protocol/src/index.ts', import.meta.url)),
     },
   },
   server: {

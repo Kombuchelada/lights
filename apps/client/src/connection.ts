@@ -4,7 +4,7 @@ import {
   HubConnectionState,
   LogLevel,
 } from '@microsoft/signalr';
-import { CONTROL_HUB_PATH, HubEvents, HubMethods, type LightState } from '@lights/protocol';
+import { CONTROL_HUB_PATH, HubEvents, HubMethods, type LightState } from '@lumessa/protocol';
 
 export type ConnectionStatus =
   | 'idle'

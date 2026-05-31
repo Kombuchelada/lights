@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace Lights.Core;
+namespace Lumessa.Core;
 
 public interface ISessionStore
 {

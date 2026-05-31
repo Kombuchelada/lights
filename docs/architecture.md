@@ -1,6 +1,6 @@
-# Lights — Architecture
+# Lumessa — Architecture
 
-> Living design doc for the Lights light-control system. Phase 1 is a working
+> Living design doc for the Lumessa light-control system. Phase 1 is a working
 > prototype of the core realtime light control; auth, payments, and profiles
 > are designed-for but deferred. Read it with [`protocol.md`](protocol.md) (the
 > wire contract) and [`roadmap.md`](roadmap.md) (what's built vs. deferred).
@@ -23,7 +23,7 @@ for accounts, billing, and saved protocols.
 | **Server** | ASP.NET Core (net10.0) minimal API + **SignalR** | Create/validate sessions, pair controller↔client, validate & relay `LightState`, hold last state for resync. |
 | **Management** | **Angular** (zoneless, signals, standalone) | Rich accessible controller UI; light/dark/system theming; throttled state sends; live preview mirror; session + QR. |
 | **Client** | **Vanilla TS + Vite** canvas PWA | Pure-black full-screen renderer; brightness via alpha; client-side flicker (rAF); **mono or dual-pane (stereo) render** with per-eye clock-grid dots + A/B background; fullscreen + Screen Wake Lock; installable. |
-| **Protocol** | TS package `@lights/protocol` | Shared types, limits, helpers; mirrors the C# DTOs. |
+| **Protocol** | TS package `@lumessa/protocol` | Shared types, limits, helpers; mirrors the C# DTOs. |
 
 ```
             create session            scan QR / type code
