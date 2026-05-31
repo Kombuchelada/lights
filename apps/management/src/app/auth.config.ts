@@ -17,6 +17,19 @@ export const authConfig = {
   audience: 'https://api.lumessa.xyz',
 } as const;
 
-/** True once real tenant values have been filled in (guards login UI in dev). */
-export const isAuthConfigured =
+/** True once real Auth0 tenant values have been filled in (vs. the placeholders). */
+const usingRealTenant =
   !authConfig.domain.startsWith('YOUR_') && !authConfig.clientId.startsWith('YOUR_');
+
+/**
+ * Local dev (localhost/loopback) runs **without** Auth0 so the controller is
+ * reachable without a tenant login — the server is the authority and there's no
+ * real protection to bypass locally. Deployed origins (app.lumessa.xyz, Railway)
+ * are unaffected and remain fully authenticated.
+ */
+const isLocalDev =
+  typeof window !== 'undefined' &&
+  ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
+
+/** True when the SPA should enforce Auth0 (real tenant values AND not local dev). */
+export const isAuthConfigured = usingRealTenant && !isLocalDev;

@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from '@auth0/auth0-angular';
 import { ControlService } from './control/control.service';
 import { ThemeService, type ThemeMode } from './theme.service';
+import { ViewService, type CardId } from './view.service';
 import { isAuthConfigured } from './auth.config';
 import { QrCode } from './qr-code';
 import { RovingRadiogroup } from './radiogroup.directive';
@@ -109,6 +110,7 @@ const hexToRgb = (value: string): Rgb | null => {
 export class App {
   protected readonly control = inject(ControlService);
   protected readonly theme = inject(ThemeService);
+  protected readonly view = inject(ViewService);
   private readonly auth = inject(AuthService);
   protected readonly state = this.control.state;
 
@@ -461,5 +463,23 @@ export class App {
 
   stopSweep(): void {
     this.control.update({ sweep: { hz: 0, axis: this.sweepAxis(), range: this.sweepRangePct() / 100 } });
+  }
+
+  // ---- View density / collapse (delegates to ViewService) ----
+
+  toggleCompact(): void {
+    this.view.toggleCompact();
+  }
+
+  toggleCard(id: CardId): void {
+    this.view.toggleCard(id);
+  }
+
+  collapseAll(): void {
+    this.view.collapseAll();
+  }
+
+  expandAll(): void {
+    this.view.expandAll();
   }
 }

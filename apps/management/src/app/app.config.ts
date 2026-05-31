@@ -8,7 +8,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAuth0, authHttpInterceptorFn } from '@auth0/auth0-angular';
 
 import { routes } from './app.routes';
-import { authConfig } from './auth.config';
+import { authConfig, isAuthConfigured } from './auth.config';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -28,14 +28,18 @@ export const appConfig: ApplicationConfig = {
       useRefreshTokens: true,
       cacheLocation: 'localstorage',
       httpInterceptor: {
-        allowedList: [
-          {
-            uri: '/api/*',
-            tokenOptions: {
-              authorizationParams: { audience: authConfig.audience },
-            },
-          },
-        ],
+        // In local dev (auth disabled) the allowedList is empty, so the
+        // interceptor never tries to attach a token to /api/* calls.
+        allowedList: isAuthConfigured
+          ? [
+              {
+                uri: '/api/*',
+                tokenOptions: {
+                  authorizationParams: { audience: authConfig.audience },
+                },
+              },
+            ]
+          : [],
       },
     }),
   ],
