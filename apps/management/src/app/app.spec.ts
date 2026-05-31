@@ -38,6 +38,18 @@ describe('App', () => {
     expect(text).not.toContain('Log in');
   });
 
+  it('reflects the compact toggle onto the shell class', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const shell = (fixture.nativeElement as HTMLElement).querySelector('.shell')!;
+    expect(shell.classList.contains('compact')).toBe(false);
+
+    (fixture.componentInstance as unknown as { toggleCompact(): void }).toggleCompact();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(shell.classList.contains('compact')).toBe(true);
+  });
+
   it('moves locked channels together when one is dragged', () => {
     const fixture = TestBed.createComponent(App);
     const app = fixture.componentInstance as unknown as {
