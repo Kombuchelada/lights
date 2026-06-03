@@ -40,7 +40,12 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
 - `pkill -f "Lumessa.Api"` self-matches the shell if the pattern is in the script — kill by port (`fuser -k 5000/tcp`) instead.
 
 ## Conventions
-- Branch: `claude/festive-ptolemy-cHoMr`. Commit footer: the session URL line. No model identifiers in artifacts.
+- **Branching:** `main` is the source of truth (and the deploy trunk). Work on the
+  per-session `claude/*` branch, which the SessionStart hook fast-forwards to
+  `origin/main` at the start of every session (`.claude/hooks/session-start.sh`,
+  `sync_branch_with_main`) so sessions never start on stale code. When done, keep
+  `main` aligned by fast-forwarding it to your branch (see the deploy note below).
+- Commit footer: the session URL line. No model identifiers in artifacts.
 - **Controller CSS:** consume **design tokens** (`var(--…)`) — never hardcode a
   color/spacing/radius/type value where a token exists. Tokens live in
   `apps/management/src/styles.scss`; the full language + scales are in
