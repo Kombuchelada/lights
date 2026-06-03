@@ -49,14 +49,14 @@
 
   @if (authConfigured && !authLoading() && !isAuthenticated()) {
     <section class="hero">
-      <p>Sign in as a clinician to start a session and control the headset light.</p>
+      <p>Sign in as a clinician to start a session and control the light on the client device.</p>
       <button class="primary" (click)="login()">Log in</button>
     </section>
   } @else if (!control.session()) {
     <section class="hero">
       <p>
-        Create a session, then open the client on the headset phone — scan the QR code
-        or enter the session code.
+        Create a session, then open the client on the participant's device (phone, tablet,
+        or laptop) — scan the QR code or enter the session code.
       </p>
       <button class="primary" (click)="start()" [disabled]="control.status() === 'connecting'">
         Start session
@@ -77,7 +77,7 @@
         </span>
         @if (control.clientConnected() && hasRenderConfirmation()) {
           <span class="echo" role="status" aria-live="polite" [class.on]="rendered()">
-            {{ rendered() ? '✓ Rendered on headset' : '… sending to headset' }}
+            {{ rendered() ? '✓ Rendered on client' : '… sending to client' }}
             <em>{{ roundTripMs() }} ms round-trip</em>
           </span>
         }
@@ -389,7 +389,7 @@
           </div>
           <span class="hint">
             Mono is the single full-screen circle. The other modes split the screen into
-            left/right panes for a headset, each driven by its eye grid below.
+            left/right panes for stereoscopic (headset) viewing, each driven by its eye grid below.
           </span>
         </div>
 
