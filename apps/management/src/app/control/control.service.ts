@@ -18,6 +18,7 @@ import {
   type LightState,
   type StateRendered,
 } from '@lumessa/protocol';
+import { isAuthConfigured } from '../auth.config';
 
 export type ConnStatus = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'disconnected';
 
@@ -76,11 +77,19 @@ export class ControlService {
 
   private async connect(code: string): Promise<void> {
     const conn = new HubConnectionBuilder()
-      .withUrl(`${this.apiBase}${CONTROL_HUB_PATH}`, {
+      .withUrl(
+        `${this.apiBase}${CONTROL_HUB_PATH}`,
         // The controller authenticates to the hub; the token rides in the query
         // string on the WebSocket handshake (the server reads it for /hubs/*).
-        accessTokenFactory: () => firstValueFrom(this.auth.getAccessTokenSilently()),
-      })
+        // Only request a token when auth is actually configured — otherwise
+        // (demo / local dev, server skips JWT validation) calling Auth0's
+        // getAccessTokenSilently with no logged-in user throws "Missing Refresh
+        // Token" and the hub negotiation fails. Mirrors the interceptor's
+        // isAuthConfigured-gated allowedList.
+        isAuthConfigured
+          ? { accessTokenFactory: () => firstValueFrom(this.auth.getAccessTokenSilently()) }
+          : {},
+      )
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Warning)
       .build();
