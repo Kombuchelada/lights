@@ -31,5 +31,18 @@ const isLocalDev =
   typeof window !== 'undefined' &&
   ['localhost', '127.0.0.1', '::1', '[::1]'].includes(window.location.hostname);
 
+/**
+ * ⚠️ DEMO SWITCH — leave `false` for normal operation.
+ *
+ * Flip to `true` to disable Auth0 login for a demo: the login UI is suppressed
+ * and "Start session" works without signing in. Redeploy the controller after
+ * changing this. Re-enable auth by setting it back to `false` and redeploying.
+ *
+ * MUST be kept in sync with the server flag `DemoDisableAuth` in
+ * server/Lumessa.Api/Program.cs — flip both together, or the SPA and server
+ * will disagree about whether auth is required.
+ */
+const DEMO_DISABLE_AUTH = true;
+
 /** True when the SPA should enforce Auth0 (real tenant values AND not local dev). */
-export const isAuthConfigured = usingRealTenant && !isLocalDev;
+export const isAuthConfigured = !DEMO_DISABLE_AUTH && usingRealTenant && !isLocalDev;

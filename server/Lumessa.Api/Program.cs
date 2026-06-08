@@ -13,9 +13,18 @@ builder.Services.AddSingleton<ISessionStore, InMemorySessionStore>();
 // The clinician (controller) authenticates via the Angular SPA; the headset
 // client stays anonymous. We validate access tokens issued by the Auth0 tenant
 // for our API audience. Config comes from env: Auth0__Domain, Auth0__Audience.
+// ⚠️ DEMO SWITCH — leave `false` for normal operation.
+// Flip to `true` to disable all auth for a demo: session creation and the hub
+// controller role become anonymous (JWT validation is skipped entirely).
+// Redeploy the server after changing this; re-enable by setting it back to
+// `false` and redeploying. MUST be kept in sync with the SPA flag
+// DEMO_DISABLE_AUTH in apps/management/src/app/auth.config.ts — flip both.
+const bool DemoDisableAuth = true;
+
 var auth0Domain = builder.Configuration["Auth0:Domain"];
 var auth0Audience = builder.Configuration["Auth0:Audience"];
-var authConfigured = !string.IsNullOrWhiteSpace(auth0Domain) && !string.IsNullOrWhiteSpace(auth0Audience);
+var authConfigured = !DemoDisableAuth
+    && !string.IsNullOrWhiteSpace(auth0Domain) && !string.IsNullOrWhiteSpace(auth0Audience);
 
 // Accept tokens from the configured domain AND any additional issuers. An Auth0
 // custom domain (login.lumessa.xyz) and the default tenant domain share signing
