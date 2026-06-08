@@ -52,6 +52,116 @@ h1 {
   border-color: color-mix(in srgb, var(--warn) 40%, transparent);
 }
 
+/* ── Session badge (top bar): the connect card collapses into this; click to
+   reopen session details in a popover. ────────────────────────────────────── */
+.session-badge-wrap {
+  position: relative;
+}
+
+.session-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.session-badge.connected {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+}
+
+.session-badge .dot-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.session-badge.connected .dot-led {
+  background: var(--ok);
+}
+
+.session-badge .badge-code {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--fg);
+}
+
+/* Pop the badge as the card "lands" in it (timed near the end of the suck). */
+.session-badge.pop {
+  animation: badge-land 0.45s ease 0.34s;
+}
+
+@keyframes badge-land {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: none;
+  }
+  45% {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent);
+  }
+}
+
+/* Click-away scrim behind the popover */
+.pop-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.session-pop {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 20;
+  width: min(320px, 86vw);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
+  animation: pop-in 0.15s ease;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.pop-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.session-pop .code {
+  font-size: var(--text-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-badge.pop,
+  .session-pop {
+    animation: none;
+  }
+}
+
 /* Auth (login/logout) chip in the top bar */
 .auth {
   display: inline-flex;
@@ -739,45 +849,48 @@ input[type="color"] {
   color: var(--on-accent);
 }
 
-/* ── Slim session bar once a client is connected ──────────────────────── */
-.code-card.slim {
-  grid-template-columns: 1fr;
-  padding: 10px 16px;
-  margin-bottom: 16px;
+/* ── Connect card collapses ("sucked into" the header session badge) once a
+   client connects. transform-origin top-right aims it at the badge. ───────── */
+.code-card.collapsing {
+  /* Accelerating ease-in = the "pull"; --suck-x/y are measured per-collapse in
+     the component so the card flies straight into the badge's center. */
+  animation: suck-into-badge 0.48s cubic-bezier(0.6, 0.04, 0.98, 0.34) forwards;
+  pointer-events: none;
+  will-change: transform, opacity, filter;
 }
 
-.code-card.slim app-qr,
-.code-card.slim .join {
-  display: none;
+@keyframes suck-into-badge {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--suck-x, 0), var(--suck-y, 0)) scale(0.02);
+    opacity: 0;
+    filter: blur(3px);
+  }
 }
 
-.code-card.slim .code-main {
-  flex-flow: row wrap;
-  align-items: baseline;
-  gap: 6px 14px;
-}
-
-/* Let the code-method's label + code flow inline in the compact row. */
-.code-card.slim .code-method {
-  display: contents;
-}
-
-.code-card.slim .code-method .label {
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  font-weight: 400;
-}
-
-.code-card.slim .code {
-  font-size: 1.4rem;
-  letter-spacing: 0.18em;
+@media (prefers-reduced-motion: reduce) {
+  .code-card.collapsing {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* ── Top deck: session/QR card + live preview, side by side on wide screens.
    Keeps the preview up top with the join info and lets the cards below use the
    full width (more masonry columns). ──────────────────────────────────────── */
 .topdeck {
+  display: block;
+}
+
+/* Card collapsed away → the preview takes the full width. */
+.topdeck.solo {
   display: block;
 }
 

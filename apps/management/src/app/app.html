@@ -31,9 +31,63 @@
       }
     </div>
 
-    <span class="status" role="status" aria-live="polite" [attr.data-status]="control.status()">
-      <span class="sr-only">Connection: </span>{{ control.status() }}
-    </span>
+    @if (control.session(); as session) {
+      <div class="session-badge-wrap">
+        <button
+          #badgeEl
+          type="button"
+          class="session-badge"
+          [class.connected]="control.clientConnected()"
+          [class.pop]="cardPhase() === 'collapsing'"
+          [attr.aria-expanded]="sessionInfoOpen()"
+          aria-haspopup="dialog"
+          title="Session details"
+          (click)="toggleSessionInfo()"
+        >
+          <span class="dot-led" aria-hidden="true"></span>
+          <span role="status" aria-live="polite">
+            <span class="sr-only">Client </span>{{ control.clientConnected() ? 'Connected' : 'Waiting' }}
+          </span>
+          <span class="badge-code">{{ session.code }}</span>
+        </button>
+        @if (sessionInfoOpen()) {
+          <button
+            type="button"
+            class="pop-scrim"
+            aria-label="Close session details"
+            (click)="closeSessionInfo()"
+          ></button>
+          <div class="session-pop" role="dialog" aria-label="Session details" (keydown.escape)="closeSessionInfo()">
+            <div class="pop-head">
+              <span class="label">Session code</span>
+              <span class="code">{{ session.code }}</span>
+            </div>
+            <a class="join" [href]="session.joinUrl" [title]="session.joinUrl" target="_blank" rel="noopener">
+              {{ session.joinUrl }}
+            </a>
+            <div class="join-actions">
+              <button type="button" class="copy" (click)="copyLink()">
+                {{ copied() ? '✓ Copied' : 'Copy link' }}
+              </button>
+              <a class="copy" [href]="mailtoHref()">✉️ Email link</a>
+            </div>
+            <span class="client" [class.on]="control.clientConnected()">
+              {{ control.clientConnected() ? '● Client connected' : '○ Waiting for client…' }}
+            </span>
+            @if (control.clientConnected() && hasRenderConfirmation()) {
+              <span class="echo" [class.on]="rendered()">
+                {{ rendered() ? '✓ Rendered on client' : '… sending to client' }}
+                <em>{{ roundTripMs() }} ms round-trip</em>
+              </span>
+            }
+          </div>
+        }
+      </div>
+    } @else {
+      <span class="status" role="status" aria-live="polite" [attr.data-status]="control.status()">
+        <span class="sr-only">Connection: </span>{{ control.status() }}
+      </span>
+    }
 
     @if (authConfigured && !authLoading()) {
       <div class="auth">
@@ -63,82 +117,67 @@
       </button>
     </section>
   } @else {
-    <div class="topdeck">
-    <section class="code-card" [class.slim]="control.clientConnected()">
-      @if (!control.clientConnected()) {
-        <div class="qr-method">
-          <app-qr [value]="control.session()!.joinUrl" />
-          <span class="method-hint">📷 Point the device's camera at this</span>
-        </div>
-      }
+    <div class="topdeck" [class.solo]="cardPhase() === 'collapsed'">
+    @if (cardPhase() !== 'collapsed') {
+    <section #cardEl class="code-card" [class.collapsing]="cardPhase() === 'collapsing'">
+      <div class="qr-method">
+        <app-qr [value]="control.session()!.joinUrl" />
+        <span class="method-hint">📷 Point the device's camera at this</span>
+      </div>
       <div class="code-main">
-        @if (!control.clientConnected()) {
-          <p class="connect-help">Connect a device — pick whichever's easiest:</p>
-        }
+        <p class="connect-help">Connect a device — pick whichever's easiest:</p>
         <div class="method code-method">
-          <span class="label">{{ control.clientConnected() ? 'Session code' : '🔢 Type the code' }}</span>
+          <span class="label">🔢 Type the code</span>
           <span class="code">{{ control.session()!.code }}</span>
-          @if (!control.clientConnected()) {
-            <span class="method-sub">at join.lumessa.xyz</span>
-          }
+          <span class="method-sub">at join.lumessa.xyz</span>
         </div>
-        @if (!control.clientConnected()) {
-          <div class="method">
-            <span class="label">🔗 Open the link</span>
-            <a
-              class="join"
-              [href]="control.session()!.joinUrl"
-              [title]="control.session()!.joinUrl"
-              target="_blank"
-              rel="noopener"
-            >
-              {{ control.session()!.joinUrl }}
-            </a>
-            <div class="join-actions">
-              <button type="button" class="copy" (click)="copyLink()">
-                {{ copied() ? '✓ Copied' : 'Copy link' }}
-              </button>
-              <a class="copy" [href]="mailtoHref()">✉️ Email link</a>
-            </div>
+        <div class="method">
+          <span class="label">🔗 Open the link</span>
+          <a
+            class="join"
+            [href]="control.session()!.joinUrl"
+            [title]="control.session()!.joinUrl"
+            target="_blank"
+            rel="noopener"
+          >
+            {{ control.session()!.joinUrl }}
+          </a>
+          <div class="join-actions">
+            <button type="button" class="copy" (click)="copyLink()">
+              {{ copied() ? '✓ Copied' : 'Copy link' }}
+            </button>
+            <a class="copy" [href]="mailtoHref()">✉️ Email link</a>
           </div>
+        </div>
 
-          <details class="connect-help-box">
-            <summary>Need help connecting a client device?</summary>
-            <div class="help-body">
-              <p>
-                The client is whatever screen the participant looks at — a phone, tablet,
-                or laptop. It just needs a web browser; there's nothing to install.
-              </p>
-              <p><strong>📷 Scan the QR code</strong> — fastest when the device is with you.
-                Open its camera and point it at the code, then tap the link that pops up.
-                On iPhone, use the built-in Camera app.</p>
-              <p><strong>🔢 Type the code</strong> — good across a room or over the phone.
-                On the device, open <strong>join.lumessa.xyz</strong> and enter the code shown above.</p>
-              <p><strong>🔗 Send the link</strong> — best for remote sessions. Use
-                <em>Copy link</em> or <em>Email link</em> to get it onto the device, then open it there.</p>
-              <p>
-                Not connecting? Make sure the device has internet, double-check the code,
-                and confirm it still says “Waiting for client…”. Codes stop working once the
-                session ends — just start a new session to get a fresh one.
-              </p>
-            </div>
-          </details>
-        }
-        <span class="client" role="status" aria-live="polite" [class.on]="control.clientConnected()">
-          {{ control.clientConnected() ? '● Client connected' : '○ Waiting for client…' }}
-        </span>
-        @if (control.clientConnected() && hasRenderConfirmation()) {
-          <span class="echo" role="status" aria-live="polite" [class.on]="rendered()">
-            {{ rendered() ? '✓ Rendered on client' : '… sending to client' }}
-            <em>{{ roundTripMs() }} ms round-trip</em>
-          </span>
-        }
+        <details class="connect-help-box">
+          <summary>Need help connecting a client device?</summary>
+          <div class="help-body">
+            <p>
+              The client is whatever screen the participant looks at — a phone, tablet,
+              or laptop. It just needs a web browser; there's nothing to install.
+            </p>
+            <p><strong>📷 Scan the QR code</strong> — fastest when the device is with you.
+              Open its camera and point it at the code, then tap the link that pops up.
+              On iPhone, use the built-in Camera app.</p>
+            <p><strong>🔢 Type the code</strong> — good across a room or over the phone.
+              On the device, open <strong>join.lumessa.xyz</strong> and enter the code shown above.</p>
+            <p><strong>🔗 Send the link</strong> — best for remote sessions. Use
+              <em>Copy link</em> or <em>Email link</em> to get it onto the device, then open it there.</p>
+            <p>
+              Not connecting? Make sure the device has internet, double-check the code,
+              and confirm it still says “Waiting for client…”. Codes stop working once the
+              session ends — just start a new session to get a fresh one.
+            </p>
+          </div>
+        </details>
       </div>
     </section>
+    }
 
     <!-- Purely a visual mirror of the controls below; each control is already
          labelled, so hide this from assistive tech to avoid duplicate noise. -->
-    <div class="preview" [class.stereo]="isStereo()" aria-hidden="true">
+    <div #previewEl class="preview" [class.stereo]="isStereo()" aria-hidden="true">
       <span class="preview-tag">Preview<em>what the client sees</em></span>
       @if (previewPanes(); as panes) {
         <div class="pane">

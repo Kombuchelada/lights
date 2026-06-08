@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from '@auth0/auth0-angular';
 import { ControlService } from './control/control.service';
@@ -270,6 +279,120 @@ export class App {
 
   start(): void {
     void this.control.startSession();
+  }
+
+  // ---- Session badge: collapse the connect card into the header badge once a
+  //      client connects; the badge then opens a popover with session details. ----
+  protected readonly sessionInfoOpen = signal(false);
+  /** open → collapsing (suck-into-badge animation) → collapsed (card unmounted). */
+  protected readonly cardPhase = signal<'open' | 'collapsing' | 'collapsed'>('open');
+  private collapseTimer?: ReturnType<typeof setTimeout>;
+  private readonly cardEl = viewChild<ElementRef<HTMLElement>>('cardEl');
+  private readonly badgeEl = viewChild<ElementRef<HTMLElement>>('badgeEl');
+  private readonly previewEl = viewChild<ElementRef<HTMLElement>>('previewEl');
+  /** Keep the collapse animation duration in one place (CSS + the unmount timer). */
+  private static readonly COLLAPSE_MS = 480;
+
+  private readonly _collapseOnConnect = effect(() => {
+    const connected = this.control.clientConnected();
+    if (!connected) {
+      // Client gone (or new/ended session): bring the card back, close popover.
+      clearTimeout(this.collapseTimer);
+      if (this.cardPhase() === 'collapsed') {
+        // Smoothly shrink the preview back as the card re-expands beside it.
+        this.flipPreview(() => this.cardPhase.set('open'));
+      } else {
+        this.cardPhase.set('open');
+      }
+      this.sessionInfoOpen.set(false);
+      return;
+    }
+    if (this.cardPhase() !== 'open') return; // already collapsing/collapsed
+    const reduceMotion =
+      typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      this.cardPhase.set('collapsed'); // skip the animation entirely
+      return;
+    }
+    this.aimCardAtBadge();
+    this.cardPhase.set('collapsing');
+    clearTimeout(this.collapseTimer);
+    // After the card finishes flying into the badge, unmount it and let the
+    // preview grow smoothly into the freed space (FLIP).
+    this.collapseTimer = setTimeout(
+      () => this.flipPreview(() => this.cardPhase.set('collapsed')),
+      App.COLLAPSE_MS,
+    );
+  });
+
+  /**
+   * FLIP the preview around a layout change: measure its box, run `mutate`
+   * (which unmounts/remounts the card and reflows the preview), then play the
+   * preview from its old box to the new one so it expands/shrinks smoothly
+   * instead of snapping. Works for both the side-by-side and stacked layouts.
+   */
+  private flipPreview(mutate: () => void): void {
+    const el = this.previewEl()?.nativeElement;
+    const reduceMotion =
+      typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!el || reduceMotion) {
+      mutate();
+      return;
+    }
+    const first = el.getBoundingClientRect();
+    mutate();
+    // Two frames so Angular's zoneless render has flushed before we measure.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const last = el.getBoundingClientRect();
+        const dx = first.left - last.left;
+        const dy = first.top - last.top;
+        const sx = last.width ? first.width / last.width : 1;
+        const sy = last.height ? first.height / last.height : 1;
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx - 1) < 0.01 && Math.abs(sy - 1) < 0.01) {
+          return; // nothing actually moved
+        }
+        el.style.transformOrigin = 'top left';
+        el.style.transition = 'none';
+        el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+        const cleanup = () => {
+          el.style.transition = '';
+          el.style.transform = '';
+          el.style.transformOrigin = '';
+          el.removeEventListener('transitionend', cleanup);
+        };
+        requestAnimationFrame(() => {
+          el.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
+          el.style.transform = '';
+          el.addEventListener('transitionend', cleanup);
+        });
+      }),
+    );
+  }
+
+  /**
+   * Point the collapse straight at the header badge (FLIP-style): measure the
+   * card→badge center delta and expose it as CSS vars the keyframe consumes, so
+   * the card shrinks to a point *at the badge* rather than a fixed guess.
+   */
+  private aimCardAtBadge(): void {
+    const card = this.cardEl()?.nativeElement;
+    const badge = this.badgeEl()?.nativeElement;
+    if (!card || !badge) return;
+    const c = card.getBoundingClientRect();
+    const b = badge.getBoundingClientRect();
+    const dx = b.left + b.width / 2 - (c.left + c.width / 2);
+    const dy = b.top + b.height / 2 - (c.top + c.height / 2);
+    card.style.setProperty('--suck-x', `${Math.round(dx)}px`);
+    card.style.setProperty('--suck-y', `${Math.round(dy)}px`);
+  }
+
+  toggleSessionInfo(): void {
+    this.sessionInfoOpen.update((v) => !v);
+  }
+
+  closeSessionInfo(): void {
+    this.sessionInfoOpen.set(false);
   }
 
   /** Pre-filled "email the join link" mailto, so a clinician can send the
