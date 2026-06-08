@@ -186,6 +186,7 @@ h1 {
 /* Segmented control (theme toggle, channel lock) */
 .seg {
   display: inline-flex;
+  flex-wrap: wrap;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   overflow: hidden;
