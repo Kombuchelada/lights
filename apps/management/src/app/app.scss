@@ -174,16 +174,111 @@ button.primary:disabled {
 .join {
   color: var(--accent);
   font-size: var(--text-sm);
-  word-break: break-all;
-}
-
-.client {
-  color: var(--muted);
-  font-size: var(--text-sm);
+  /* Keep the URL on one tidy line — full value lives in href/title/Copy, so
+     never let it shatter character-by-character in a narrow column. */
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .client.on {
   color: var(--ok);
+}
+
+/* QR column + its caption */
+.qr-method {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Muted helper text scattered through the connect card */
+.method-hint,
+.connect-help,
+.method-sub,
+.client,
+.help-body p {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.method-hint {
+  text-align: center;
+}
+
+.connect-help {
+  margin: 0 0 var(--space-1);
+}
+
+/* Each labelled join method (type the code / open the link) */
+.method {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.method .label {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.join-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+}
+
+.copy {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--accent);
+  border-radius: var(--radius-pill);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.copy:hover {
+  border-color: var(--accent);
+}
+
+/* "Need help connecting a client device?" disclosure */
+.connect-help-box {
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
+}
+
+.connect-help-box > summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: var(--text-sm);
+}
+
+.help-body {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.help-body p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.help-body strong {
+  color: var(--fg);
 }
 
 /* Live preview mirror */
@@ -217,15 +312,32 @@ button.primary:disabled {
   border-left: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 }
 
-.preview .badge {
+.preview .badge,
+.preview-tag {
   position: absolute;
-  top: var(--space-2);
-  right: var(--space-3);
   font-size: var(--text-xs);
   color: var(--on-accent);
   background: rgb(0 0 0 / 50%);
   padding: 2px var(--space-2);
   border-radius: var(--radius-pill);
+}
+
+.preview .badge {
+  top: var(--space-2);
+  right: var(--space-3);
+}
+
+/* Corner label clarifying the box mirrors the client screen. Sits bottom-left,
+   clear of the flicker (top-right) and sweep (top-left) badges. */
+.preview-tag {
+  bottom: var(--space-2);
+  left: var(--space-3);
+}
+
+.preview-tag em {
+  font-style: normal;
+  opacity: 0.7;
+  margin-left: var(--space-2);
 }
 
 /* Control cards */
@@ -588,6 +700,22 @@ input[type="color"] {
     justify-items: center;
     text-align: center;
   }
+
+  /* Stacked + centered: relax the big code so it never overflows the column,
+     and align the join method's contents to the centered layout. */
+  .code {
+    font-size: var(--text-lg);
+    letter-spacing: 0.18em;
+  }
+
+  .method {
+    align-items: center;
+    text-align: center;
+  }
+
+  .join-actions {
+    justify-content: center;
+  }
 }
 
 /* ── Compact-view topbar toggle ───────────────────────────────────────── */
@@ -627,6 +755,18 @@ input[type="color"] {
   flex-flow: row wrap;
   align-items: baseline;
   gap: 6px 14px;
+}
+
+/* Let the code-method's label + code flow inline in the compact row. */
+.code-card.slim .code-method {
+  display: contents;
+}
+
+.code-card.slim .code-method .label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 400;
 }
 
 .code-card.slim .code {
@@ -809,8 +949,10 @@ input[type="color"] {
   column-width: 280px;
 }
 
-/* ── Medium+ screens: pair the session card with the preview in two columns. */
-@media (width >= 760px) {
+/* ── Medium+ screens: pair the session card with the preview in two columns.
+   Hold off until there's real room — pairing too early crushes the connect
+   card into a ribbon and the join URL/code overflow. ──────────────────────── */
+@media (width >= 1000px) {
   .topdeck {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

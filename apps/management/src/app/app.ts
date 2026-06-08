@@ -272,6 +272,35 @@ export class App {
     void this.control.startSession();
   }
 
+  /** Pre-filled "email the join link" mailto, so a clinician can send the
+      client device a one-tap invite (link + code + a line of instructions). */
+  protected readonly mailtoHref = computed(() => {
+    const s = this.control.session();
+    if (!s) return '';
+    const subject = 'Join my Lumessa session';
+    const body =
+      `Open this link on the device you'll use as the screen:\n\n${s.joinUrl}\n\n` +
+      `Or go to join.lumessa.xyz and enter this code: ${s.code}`;
+    return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  });
+
+  /** Transient "Copied ✓" feedback on the join-link copy button. */
+  protected readonly copied = signal(false);
+  private copiedTimer?: ReturnType<typeof setTimeout>;
+
+  async copyLink(): Promise<void> {
+    const url = this.control.session()?.joinUrl;
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      this.copied.set(true);
+      clearTimeout(this.copiedTimer);
+      this.copiedTimer = setTimeout(() => this.copied.set(false), 2000);
+    } catch {
+      // Clipboard blocked (e.g. non-secure context) — link stays selectable.
+    }
+  }
+
   setTheme(mode: ThemeMode): void {
     this.theme.set(mode);
   }
