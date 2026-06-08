@@ -193,6 +193,10 @@ h1 {
 }
 
 .seg-btn {
+  /* Share the group's width evenly so slack doesn't pile onto the last
+     button (Paired flush to the edge / Vertical "weirdly long"); each button
+     stays at least content-wide via the default min-width: auto. */
+  flex: 1 1 0;
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -201,6 +205,7 @@ h1 {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
 }
 
