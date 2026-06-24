@@ -51,8 +51,12 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   color/spacing/radius/type value where a token exists. Tokens live in
   `apps/management/src/styles.scss`; the full language + scales are in
   `docs/design-system.md` (decision: `docs/adr/0002`). `npm run lint:css`
-  (stylelint) enforces this in CI, phased per axis (color now). The client PWA is
-  out of scope — it's a thin single-tool renderer.
+  (stylelint) enforces this in CI, phased per axis (color now). A committed
+  **pre-commit hook** (`.githooks/pre-commit`, enabled via `core.hooksPath` —
+  set by the session-start hook) runs `stylelint --fix` on staged management
+  SCSS and re-stages it, so formatting lapses never reach CI; if it can't
+  auto-fix, it blocks the commit. The client PWA is out of scope — it's a thin
+  single-tool renderer.
 
 ## Status
 - ✅ **M0** scaffold + docs + protocol. ✅ **M1** realtime core. ✅ **Phase-1

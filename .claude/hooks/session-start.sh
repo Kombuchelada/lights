@@ -10,12 +10,20 @@
 # Idempotent and safe to run repeatedly.
 set -euo pipefail
 
-# Web-only: on a developer's own machine the toolchain is already present.
+ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+
+# --- enforce the repo's committed git hooks --------------------------------
+# Point git at .githooks/ (committed, so the pre-commit lint:css guard travels
+# with the repo). Runs on every machine — git hooks aren't shared via clone, so
+# this is the only thing that turns them on. Cheap and idempotent.
+if command -v git >/dev/null 2>&1 && git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git -C "$ROOT" config core.hooksPath .githooks || true
+fi
+
+# Web-only below: on a developer's own machine the toolchain is already present.
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
   exit 0
 fi
-
-ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 
 # --- sync the working branch with main -------------------------------------
 # `main` is the deploy trunk (push to main → Railway auto-rebuilds). New web

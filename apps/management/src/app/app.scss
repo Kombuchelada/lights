@@ -104,6 +104,7 @@ h1 {
     transform: scale(1);
     box-shadow: none;
   }
+
   45% {
     transform: scale(1.18);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent);
@@ -871,9 +872,11 @@ input[type="color"] {
     opacity: 1;
     filter: blur(0);
   }
+
   80% {
     opacity: 1;
   }
+
   100% {
     transform: translate(var(--suck-x, 0), var(--suck-y, 0)) scale(0.02);
     opacity: 0;

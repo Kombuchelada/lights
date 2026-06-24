@@ -1,0 +1,40 @@
+#!/bin/bash
+# pre-commit: keep committed Angular SCSS lint-clean so CI's `lint:css` (the
+# design-token gate, see CLAUDE.md → Conventions) never goes red after a push.
+#
+# Auto-fixes the formatting rules stylelint can fix (e.g. rule-empty-line-before)
+# on the *staged* .scss files and re-stages them, then blocks the commit only if
+# something unfixable remains. Scoped to apps/management — the client PWA is out
+# of stylelint scope.
+#
+# Enabled via `core.hooksPath=.githooks`, set by .claude/hooks/session-start.sh
+# and committed here so the hook travels with the repo. To enable manually on a
+# fresh clone: `git config core.hooksPath .githooks`.
+set -euo pipefail
+
+# Staged (added/copied/modified) management SCSS, repo-relative.
+mapfile -t staged < <(git diff --cached --name-only --diff-filter=ACM -- apps/management | grep '\.scss$' || true)
+[ ${#staged[@]} -eq 0 ] && exit 0
+
+bin="apps/management/node_modules/.bin/stylelint"
+if [ ! -x "$bin" ]; then
+  echo "pre-commit: stylelint not installed in apps/management — skipping lint:css." >&2
+  echo "            run 'npm install --prefix apps/management' to enable this check." >&2
+  exit 0
+fi
+
+# stylelint runs from the app dir; strip the apps/management/ prefix off the paths.
+rel=()
+for f in "${staged[@]}"; do rel+=("${f#apps/management/}"); done
+
+if ! ( cd apps/management && ./node_modules/.bin/stylelint --fix "${rel[@]}" ); then
+  echo "pre-commit: stylelint found problems it can't auto-fix (see above)." >&2
+  echo "            fix them, then re-commit." >&2
+  exit 1
+fi
+
+# Re-stage whatever --fix rewrote so the commit captures the clean version.
+# (Note: this stages the whole file; avoid partial-staging a .scss you're also
+# hand-editing in the same commit.)
+git add -- "${staged[@]}"
+exit 0
