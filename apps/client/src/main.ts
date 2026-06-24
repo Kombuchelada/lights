@@ -30,7 +30,34 @@ let flickerConsent = false;
 let consentAsked = false;
 let connStatus: ConnectionStatus = 'idle';
 
-/** Bring back the join overlay (e.g. on a drop, or summoned by long-press). */
+/** The last session code we connected with, so a page refresh can re-attempt it. */
+const LAST_CODE_KEY = 'lumessa:lastCode';
+
+function rememberCode(code: string): void {
+  try {
+    sessionStorage.setItem(LAST_CODE_KEY, code);
+  } catch {
+    /* storage may be unavailable (private mode) — refresh just won't auto-rejoin */
+  }
+}
+
+function forgetCode(): void {
+  try {
+    sessionStorage.removeItem(LAST_CODE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function rememberedCode(): string | null {
+  try {
+    return sessionStorage.getItem(LAST_CODE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Bring back the join overlay (e.g. when the controller or session drops). */
 function showJoinOverlay(message?: string): void {
   overlay.classList.remove('hidden');
   // "Resume" only makes sense when the hub link is still up behind the overlay.
@@ -76,7 +103,10 @@ const connection = new ClientConnection(apiBase, {
   // The controller leaving leaves the client on a now-static frame with no UI;
   // surface the join screen so it can rejoin or enter a new code (not stuck).
   onControllerLeft: () => showJoinOverlay('Controller disconnected. Enter a code or scan to rejoin.'),
-  onSessionEnded: (reason) => showJoinOverlay(`Session ended: ${reason}`),
+  onSessionEnded: (reason) => {
+    forgetCode(); // the session is gone — a refresh shouldn't try to rejoin it
+    showJoinOverlay(`Session ended: ${reason}`);
+  },
 });
 
 async function connect(code: string): Promise<void> {
@@ -84,6 +114,7 @@ async function connect(code: string): Promise<void> {
   if (!normalized) return;
   try {
     await connection.join(normalized);
+    rememberCode(normalized); // so a page refresh re-attempts this session
   } catch (err) {
     setStatus(`Could not join: ${(err as Error)?.message ?? 'unknown error'}`);
   }
@@ -135,9 +166,9 @@ if (QrScanner.supported) {
 
 scannerCancel.addEventListener('click', closeScanner);
 
-// Dismiss the summoned overlay and return to the live stimulus.
+// Dismiss the overlay and return to the live stimulus (shown when still connected).
 resumeBtn.addEventListener('click', () => overlay.classList.add('hidden'));
-// Hard refresh — the reliable escape hatch in a standalone PWA (no address bar).
+// Hard refresh — re-attempts the last session via the remembered code on load.
 reloadBtn.addEventListener('click', () => location.reload());
 
 acceptBtn.addEventListener('click', () => {
@@ -185,54 +216,22 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') void requestWakeLock();
 });
 
-// Tap = full-screen + wake lock. Press-and-hold = summon the join overlay (the
-// escape hatch for a standalone PWA, where there's no browser UI to reload).
-const LONG_PRESS_MS = 700;
-const MOVE_TOLERANCE_PX = 12;
-let pressTimer: ReturnType<typeof setTimeout> | undefined;
-let pressOrigin: { x: number; y: number } | null = null;
-let longPressFired = false;
-
-function cancelPress(): void {
-  clearTimeout(pressTimer);
-  pressOrigin = null;
-}
-
-canvas.addEventListener('pointerdown', (event) => {
-  if (!overlay.classList.contains('hidden')) return; // overlay already open
-  longPressFired = false;
-  pressOrigin = { x: event.clientX, y: event.clientY };
-  pressTimer = setTimeout(() => {
-    longPressFired = true;
-    showJoinOverlay();
-  }, LONG_PRESS_MS);
-});
-
-canvas.addEventListener('pointermove', (event) => {
-  if (!pressOrigin) return;
-  if (Math.hypot(event.clientX - pressOrigin.x, event.clientY - pressOrigin.y) > MOVE_TOLERANCE_PX) {
-    cancelPress();
-  }
-});
-canvas.addEventListener('pointerup', cancelPress);
-canvas.addEventListener('pointercancel', cancelPress);
-
+// Tap the canvas to go full-screen + keep the screen awake. If the connection
+// drops, refreshing the page re-attempts the last session (see auto-join below).
 canvas.addEventListener('click', () => {
-  if (longPressFired) {
-    longPressFired = false; // the hold already opened the overlay; skip full-screen
-    return;
-  }
   if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
     void document.documentElement.requestFullscreen().catch(() => undefined);
   }
   void requestWakeLock();
 });
 
-// Auto-join when a code arrives via the URL (e.g. from scanning the QR).
+// Auto-join on load: a `?code=` URL (e.g. from a scanned QR) wins; otherwise fall
+// back to the last code we connected with, so a page refresh reconnects.
 const urlCode = new URLSearchParams(window.location.search).get('code');
-if (urlCode) {
-  codeInput.value = urlCode.toUpperCase();
-  void connect(urlCode);
+const resumeCode = urlCode ?? rememberedCode();
+if (resumeCode) {
+  codeInput.value = resumeCode.toUpperCase();
+  void connect(resumeCode);
 }
 
 // Register the service worker for PWA install/offline (no-op on insecure origins).

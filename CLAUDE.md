@@ -34,8 +34,9 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   ignores it); the Fullscreen API is unsupported on iPhone for non-video, so
   tap-to-fullscreen no-ops there and the **status bar can't be hidden** in a
   home-screen web app (`black-translucent` over black is the best blend).
-- **Client escape hatch:** standalone PWA has no address bar, so **long-press the
-  canvas** summons the join overlay (Resume / Reload / re-join); the overlay also
+- **Client escape hatch:** a page **refresh re-attempts the last session** — the
+  joined code is kept in `sessionStorage` (cleared on `onSessionEnded`) and replayed
+  through the same auto-join path as a `?code=` URL. The join overlay also
   auto-shows when the controller or session drops (`onControllerLeft`/`onSessionEnded`).
 - `pkill -f "Lumessa.Api"` self-matches the shell if the pattern is in the script — kill by port (`fuser -k 5000/tcp`) instead.
 
