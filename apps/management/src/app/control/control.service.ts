@@ -87,7 +87,10 @@ export class ControlService {
         // Token" and the hub negotiation fails. Mirrors the interceptor's
         // isAuthConfigured-gated allowedList.
         isAuthConfigured
-          ? { accessTokenFactory: () => firstValueFrom(this.auth.getAccessTokenSilently()) }
+          ? {
+              accessTokenFactory: async () =>
+                (await firstValueFrom(this.auth.getAccessTokenSilently())) ?? '',
+            }
           : {},
       )
       .withAutomaticReconnect()

@@ -82,6 +82,14 @@ body {
   background: var(--bg);
 }
 
+/* Form controls don't inherit the page font by default. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 /* Visually hidden, but available to screen readers. */
 .sr-only {
   position: absolute;

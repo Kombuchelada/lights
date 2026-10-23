@@ -15,6 +15,7 @@ import { ThemeService, type ThemeMode } from './theme.service';
 import { ViewService, type CardId } from './view.service';
 import { isAuthConfigured } from './auth.config';
 import { QrCode } from './qr-code';
+import { Icon, type IconName } from './icon';
 import { RovingRadiogroup } from './radiogroup.directive';
 import {
   FLICKER_HIGH_RISK_BAND_HZ,
@@ -111,7 +112,7 @@ const hexToRgb = (value: string): Rgb | null => {
 
 @Component({
   selector: 'app-root',
-  imports: [QrCode, RovingRadiogroup],
+  imports: [QrCode, RovingRadiogroup, Icon],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -179,10 +180,10 @@ export class App {
     { value: 'rgb', label: 'All' },
   ];
 
-  protected readonly themeOptions: readonly { value: ThemeMode; label: string; icon: string }[] = [
-    { value: 'system', label: 'System', icon: '🖥' },
-    { value: 'light', label: 'Light', icon: '☀' },
-    { value: 'dark', label: 'Dark', icon: '🌙' },
+  protected readonly themeOptions: readonly { value: ThemeMode; label: string; icon: IconName }[] = [
+    { value: 'system', label: 'System', icon: 'monitor' },
+    { value: 'light', label: 'Light', icon: 'sun' },
+    { value: 'dark', label: 'Dark', icon: 'moon' },
   ];
 
   protected readonly modeOptions: readonly { value: RenderMode; label: string }[] = [
@@ -395,6 +396,18 @@ export class App {
     this.sessionInfoOpen.set(false);
   }
 
+  /** Host the client is served from (e.g. `join.lumessa.xyz`), derived from the
+      server-issued join URL so dev and prod each show the right address. */
+  protected readonly joinHost = computed(() => {
+    const url = this.control.session()?.joinUrl;
+    if (!url) return '';
+    try {
+      return new URL(url).host;
+    } catch {
+      return url;
+    }
+  });
+
   /** Pre-filled "email the join link" mailto, so a clinician can send the
       client device a one-tap invite (link + code + a line of instructions). */
   protected readonly mailtoHref = computed(() => {
@@ -403,7 +416,7 @@ export class App {
     const subject = 'Join my Lumessa session';
     const body =
       `Open this link on the device you'll use as the screen:\n\n${s.joinUrl}\n\n` +
-      `Or go to join.lumessa.xyz and enter this code: ${s.code}`;
+      `Or go to ${this.joinHost()} and enter this code: ${s.code}`;
     return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   });
 

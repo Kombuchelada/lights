@@ -11,7 +11,7 @@
       aria-label="Compact view"
       (click)="toggleCompact()"
     >
-      <span aria-hidden="true">▤</span>
+      <app-icon name="rows" />
     </button>
 
     <div class="seg theme-toggle" role="radiogroup" aria-label="Theme">
@@ -25,7 +25,7 @@
           [title]="opt.label + ' theme'"
           (click)="setTheme(opt.value)"
         >
-          <span aria-hidden="true">{{ opt.icon }}</span>
+          <app-icon [name]="opt.icon" />
           <span>{{ opt.label }}</span>
         </button>
       }
@@ -67,9 +67,9 @@
             </a>
             <div class="join-actions">
               <button type="button" class="copy" (click)="copyLink()">
-                {{ copied() ? '✓ Copied' : 'Copy link' }}
+                @if (copied()) { <app-icon name="check" /> Copied } @else { Copy link }
               </button>
-              <a class="copy" [href]="mailtoHref()">✉️ Email link</a>
+              <a class="copy" [href]="mailtoHref()"><app-icon name="mail" /> Email link</a>
             </div>
             <span class="client" [class.on]="control.clientConnected()">
               {{ control.clientConnected() ? '● Client connected' : '○ Waiting for client…' }}
@@ -122,17 +122,17 @@
     <section #cardEl class="code-card" [class.collapsing]="cardPhase() === 'collapsing'">
       <div class="qr-method">
         <app-qr [value]="control.session()!.joinUrl" />
-        <span class="method-hint">📷 Point the device's camera at this</span>
+        <span class="method-hint"><app-icon name="camera" /> Point the device's camera here</span>
       </div>
       <div class="code-main">
         <p class="connect-help">Connect a device — pick whichever's easiest:</p>
         <div class="method code-method">
-          <span class="label">🔢 Type the code</span>
+          <span class="label"><app-icon name="hash" /> Type the code</span>
           <span class="code">{{ control.session()!.code }}</span>
-          <span class="method-sub">at join.lumessa.xyz</span>
+          <span class="method-sub">at {{ joinHost() }}</span>
         </div>
         <div class="method">
-          <span class="label">🔗 Open the link</span>
+          <span class="label"><app-icon name="link" /> Open the link</span>
           <a
             class="join"
             [href]="control.session()!.joinUrl"
@@ -144,9 +144,9 @@
           </a>
           <div class="join-actions">
             <button type="button" class="copy" (click)="copyLink()">
-              {{ copied() ? '✓ Copied' : 'Copy link' }}
+              @if (copied()) { <app-icon name="check" /> Copied } @else { Copy link }
             </button>
-            <a class="copy" [href]="mailtoHref()">✉️ Email link</a>
+            <a class="copy" [href]="mailtoHref()"><app-icon name="mail" /> Email link</a>
           </div>
         </div>
 
@@ -157,12 +157,12 @@
               The client is whatever screen the participant looks at — a phone, tablet,
               or laptop. It just needs a web browser; there's nothing to install.
             </p>
-            <p><strong>📷 Scan the QR code</strong> — fastest when the device is with you.
+            <p><strong>Scan the QR code</strong> — fastest when the device is with you.
               Open its camera and point it at the code, then tap the link that pops up.
               On iPhone, use the built-in Camera app.</p>
-            <p><strong>🔢 Type the code</strong> — good across a room or over the phone.
-              On the device, open <strong>join.lumessa.xyz</strong> and enter the code shown above.</p>
-            <p><strong>🔗 Send the link</strong> — best for remote sessions. Use
+            <p><strong>Type the code</strong> — good across a room or over the phone.
+              On the device, open <strong>{{ joinHost() }}</strong> and enter the code shown above.</p>
+            <p><strong>Send the link</strong> — best for remote sessions. Use
               <em>Copy link</em> or <em>Email link</em> to get it onto the device, then open it there.</p>
             <p>
               Not connecting? Make sure the device has internet, double-check the code,
@@ -218,10 +218,10 @@
         ></span>
       }
       @if (flickerHz() > 0) {
-        <span class="badge">⚡ {{ flickerHz() }} Hz</span>
+        <span class="badge"><app-icon name="bolt" /> {{ flickerHz() }} Hz</span>
       }
       @if (sweeping()) {
-        <span class="badge badge-sweep">↔ {{ sweepHz() }} Hz</span>
+        <span class="badge badge-sweep"><app-icon name="sweep" /> {{ sweepHz() }} Hz</span>
       }
     </div>
     </div>
@@ -237,7 +237,7 @@
         <header class="card-head">
           <h2 class="card-title">
             <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('color')" (click)="toggleCard('color')">
-              <span class="chevron" aria-hidden="true">▾</span>
+              <app-icon class="chevron" name="chevron" />
               Color
             </button>
           </h2>
@@ -266,7 +266,7 @@
 
         <div class="memory">
           <button type="button" class="link save" (click)="saveColor()" title="Stash the current color">
-            ⊕ Save
+            <app-icon name="plus" /> Save
           </button>
           @for (slot of memory(); track $index) {
             <button
@@ -335,7 +335,7 @@
         </div>
 
         <div class="field" title="Channel lock">
-          <span class="label"><span class="lbl-icon" aria-hidden="true">🔒</span><span class="lbl-text">Channel lock</span></span>
+          <span class="label"><app-icon class="lbl-icon" name="lock" /><span class="lbl-text">Channel lock</span></span>
           <div class="seg" role="radiogroup" aria-label="Lock color channels together">
             @for (opt of lockOptions; track opt.value) {
               <button
@@ -355,7 +355,7 @@
 
         <div class="field" title="Wavelength">
           <span class="label">
-            <span class="lbl-icon" aria-hidden="true">🌈</span><span class="lbl-text">Wavelength</span> <em>{{ wavelength() }} nm</em>
+            <app-icon class="lbl-icon" name="wave" /><span class="lbl-text">Wavelength</span> <em>{{ wavelength() }} nm</em>
             @if (usingWavelength()) { <span class="tag">spectral</span> }
           </span>
           <div class="slider-row">
@@ -383,7 +383,7 @@
         <header class="card-head">
           <h2 class="card-title">
             <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('light')" (click)="toggleCard('light')">
-              <span class="chevron" aria-hidden="true">▾</span>
+              <app-icon class="chevron" name="chevron" />
               Light
             </button>
           </h2>
@@ -391,7 +391,7 @@
         </header>
         <div class="card-body">
         <label class="field" title="Brightness">
-          <span class="label"><span class="lbl-icon" aria-hidden="true">☀</span><span class="lbl-text">Brightness</span> <em>{{ brightnessPct() }}%</em></span>
+          <span class="label"><app-icon class="lbl-icon" name="sun" /><span class="lbl-text">Brightness</span> <em>{{ brightnessPct() }}%</em></span>
           <input
             type="range"
             min="0"
@@ -402,7 +402,7 @@
           />
         </label>
         <label class="field" title="Size">
-          <span class="label"><span class="lbl-icon" aria-hidden="true">⊙</span><span class="lbl-text">Size</span> <em>{{ radiusPct() }}%</em></span>
+          <span class="label"><app-icon class="lbl-icon" name="size" /><span class="lbl-text">Size</span> <em>{{ radiusPct() }}%</em></span>
           <input
             type="range"
             min="0"
@@ -419,7 +419,7 @@
         <header class="card-head">
           <h2 class="card-title">
             <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('position')" (click)="toggleCard('position')">
-              <span class="chevron" aria-hidden="true">▾</span>
+              <app-icon class="chevron" name="chevron" />
               Position
             </button>
           </h2>
@@ -438,7 +438,7 @@
             [attr.aria-label]="'Horizontal position, ' + xPct() + ' percent'"
           />
         </label>
-        <label class="sub-field" style="margin-top: 12px">
+        <label class="sub-field">
           <span>Y</span>
           <input
             type="range"
@@ -456,7 +456,7 @@
         <header class="card-head">
           <h2 class="card-title">
             <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('stereo')" (click)="toggleCard('stereo')">
-              <span class="chevron" aria-hidden="true">▾</span>
+              <app-icon class="chevron" name="chevron" />
               Stereo / VR
             </button>
           </h2>
@@ -576,7 +576,7 @@
               [attr.aria-label]="'Left eye rotation, ' + leftRotation() + ' degrees'"
             />
           </label>
-          <label class="sub-field" style="margin-top: 12px">
+          <label class="sub-field">
             <span>R</span>
             <input
               type="range"
@@ -595,13 +595,13 @@
         <header class="card-head">
           <h2 class="card-title">
             <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('flicker')" (click)="toggleCard('flicker')">
-              <span class="chevron" aria-hidden="true">▾</span>
+              <app-icon class="chevron" name="chevron" />
               Flicker
             </button>
           </h2>
           <span class="summary" [class.risk]="flickerRisk() !== 'none'">
             {{ flickerHz() > 0 ? flickerHz() + ' Hz' : 'Off' }}
-            @if (flickerRisk() !== 'none') { ⚠ }
+            @if (flickerRisk() !== 'none') { <app-icon name="alert" /> }
           </span>
           @if (flickerHz() > 0) {
             <button type="button" class="link" (click)="stopFlicker()">Stop</button>
@@ -609,7 +609,7 @@
         </header>
         <div class="card-body">
         <label class="field" title="Frequency">
-          <span class="label"><span class="lbl-icon" aria-hidden="true">⚡</span><span class="lbl-text">Frequency</span> <em>{{ flickerHz() }} Hz</em></span>
+          <span class="label"><app-icon class="lbl-icon" name="bolt" /><span class="lbl-text">Frequency</span> <em>{{ flickerHz() }} Hz</em></span>
           <input
             class="flicker"
             [class.risk-high]="flickerRisk() === 'high'"
@@ -625,13 +625,13 @@
         <div class="warn" role="status" aria-live="polite">
           @if (flickerRisk() === 'high') {
             <p class="warn-high">
-              ⚠ High-risk band ({{ riskBand.min }}–{{ riskBand.max }} Hz). These frequencies are the
+              <app-icon name="alert" /> High-risk band ({{ riskBand.min }}–{{ riskBand.max }} Hz). These frequencies are the
               most likely to trigger photosensitive seizures. The client must give explicit consent
               before any flicker is shown.
             </p>
           } @else if (flickerRisk() === 'caution') {
             <p class="warn-caution">
-              ⚠ Flashing light can trigger seizures in people with photosensitive epilepsy. The
+              <app-icon name="alert" /> Flashing light can trigger seizures in people with photosensitive epilepsy. The
               client must consent before flicker is rendered.
             </p>
           }
@@ -643,13 +643,13 @@
         <header class="card-head">
           <h2 class="card-title">
             <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('ab')" (click)="toggleCard('ab')">
-              <span class="chevron" aria-hidden="true">▾</span>
+              <app-icon class="chevron" name="chevron" />
               A/B background
             </button>
           </h2>
           <span class="summary" [class.risk]="abRisk() !== 'none'">
             {{ abHz() > 0 ? abHz() + ' Hz' : 'Off' }}
-            @if (abRisk() !== 'none') { ⚠ }
+            @if (abRisk() !== 'none') { <app-icon name="alert" /> }
           </span>
           @if (abHz() > 0) {
             <button type="button" class="link" (click)="stopAb()">Stop</button>
@@ -683,12 +683,12 @@
         <div class="warn" role="status" aria-live="polite">
           @if (abRisk() === 'high') {
             <p class="warn-high">
-              ⚠ High-risk band ({{ riskBand.min }}–{{ riskBand.max }} Hz). A full-screen flashing
+              <app-icon name="alert" /> High-risk band ({{ riskBand.min }}–{{ riskBand.max }} Hz). A full-screen flashing
               background is a seizure risk; the client must consent before it is shown.
             </p>
           } @else if (abRisk() === 'caution') {
             <p class="warn-caution">
-              ⚠ An alternating background flashes the whole screen. The client must consent before
+              <app-icon name="alert" /> An alternating background flashes the whole screen. The client must consent before
               it is rendered.
             </p>
           }
@@ -700,7 +700,7 @@
         <header class="card-head">
           <h2 class="card-title">
             <button type="button" class="card-toggle" [attr.aria-expanded]="!view.isCollapsed('sweep')" (click)="toggleCard('sweep')">
-              <span class="chevron" aria-hidden="true">▾</span>
+              <app-icon class="chevron" name="chevron" />
               Sweep (KITT)
             </button>
           </h2>

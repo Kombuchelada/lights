@@ -90,7 +90,7 @@ h1 {
 .session-badge .badge-code {
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--fg);
+  color: var(--text);
 }
 
 /* Pop the badge as the card "lands" in it (timed near the end of the suck). */
@@ -340,7 +340,7 @@ button.primary:disabled {
 .method .label {
   text-transform: none;
   letter-spacing: normal;
-  color: var(--fg);
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -363,6 +363,7 @@ button.primary:disabled {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  gap: var(--space-1);
 }
 
 .copy:hover {
@@ -395,7 +396,7 @@ button.primary:disabled {
 }
 
 .help-body strong {
-  color: var(--fg);
+  color: var(--text);
 }
 
 /* Live preview mirror */
@@ -641,6 +642,10 @@ button.link {
   grid-template-columns: 18px 1fr;
   align-items: center;
   gap: var(--space-3);
+}
+
+.sub-field + .sub-field {
+  margin-top: var(--space-3);
 }
 
 .sub-field > span {
@@ -1059,7 +1064,7 @@ input[type="color"] {
 }
 
 .compact .lbl-icon {
-  display: inline;
+  display: inline-flex;
 }
 
 .compact .hint {
