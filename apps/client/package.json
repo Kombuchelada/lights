@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@microsoft/signalr": "^8.0.0",
+    "@microsoft/signalr": "^10.0.11",
     "jsqr": "^1.4.0"
   },
   "devDependencies": {
