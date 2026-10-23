@@ -1,9 +1,10 @@
 # Lumessa — Architecture
 
-> Living design doc for the Lumessa light-control system. Phase 1 is a working
-> prototype of the core realtime light control; auth, payments, and profiles
-> are designed-for but deferred. Read it with [`protocol.md`](protocol.md) (the
-> wire contract) and [`roadmap.md`](roadmap.md) (what's built vs. deferred).
+> Living design doc for the Lumessa light-control system. The realtime control
+> surface (Phases 1–3) and clinician auth are live in production; persistence,
+> billing, and scale-out are designed-for but deferred. Read it with
+> [`protocol.md`](protocol.md) (the wire contract) and [`roadmap.md`](roadmap.md)
+> (what's built vs. deferred).
 
 ## 1. What this is
 
@@ -21,14 +22,14 @@ for accounts, billing, and saved protocols.
 | Component | Tech | Responsibility |
 |---|---|---|
 | **Server** | ASP.NET Core (net10.0) minimal API + **SignalR** | Create/validate sessions, pair controller↔client, validate & relay `LightState`, hold last state for resync. |
-| **Management** | **Angular** (zoneless, signals, standalone) | Rich accessible controller UI; light/dark/system theming; throttled state sends; live preview mirror; session + QR. |
+| **Controller** (`apps/management`) | **Angular** (zoneless, signals, standalone) | Rich accessible controller UI; light/dark/system theming; throttled state sends; live preview mirror; session + QR. |
 | **Client** | **Vanilla TS + Vite** canvas PWA | Pure-black full-screen renderer; brightness via alpha; client-side flicker (rAF); **mono or dual-pane (stereo) render** with per-eye clock-grid dots + A/B background; fullscreen + Screen Wake Lock; installable. |
 | **Protocol** | TS package `@lumessa/protocol` | Shared types, limits, helpers; mirrors the C# DTOs. |
 
 ```
             create session            scan QR / type code
  ┌──────────────────┐  POST /api/sessions   ┌──────────────────┐
- │  Management app   │ ──────────────►       │   Headset client  │
+ │    Controller     │ ──────────────►       │   Headset client  │
  │ (Angular zoneless)│  {code, qr, id}       │ (vanilla TS canvas│
  │  RGB/λ/flicker UI │                       │  PWA, pure black) │
  └────────┬─────────┘                        └─────────┬────────┘
@@ -109,16 +110,12 @@ This is **not** a medical device and makes no clinical claims.
 
 ## 7. Environment
 
-- **Node ≥ 20 / npm ≥ 10** for the front-ends; **.NET SDK 10 (LTS)** for the
-  server (drop to `net9.0` in the `.csproj` if needed).
-- **Dev:** front-ends proxy `/api` and `/hubs` to the server. The management app
-  runs on `:4200`, the client on `:5173`, the server on `:5001`.
+- **Node ≥ 22** for the front-ends; **.NET SDK 10 (LTS)** for the server (drop
+  to `net9.0` in the `.csproj` if needed).
+- **Dev:** front-ends proxy `/api` and `/hubs` to the server. The controller
+  runs on `:4200`, the client on `:5173`, the server on `:5000` (HTTPS `:5001`).
 - **Real-device testing:** WebSockets, PWA install, fullscreen, and the Screen
-  Wake Lock API need a **secure context (HTTPS)**. Serve over your LAN IP with a
-  dev cert, or use an HTTPS dev tunnel and point the client's API base at it.
-- **Note on this repo's cloud authoring environment:** the .NET SDK is not
-  installable there, so the server is authored to build/run with `dotnet`
-  locally; the Node apps build and run in either place.
+  Wake Lock API need a **secure context (HTTPS)** — see [`testing.md`](testing.md).
 
 ## 8. Roadmap beyond Phase 1 (seams already in place)
 

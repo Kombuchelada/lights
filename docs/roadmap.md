@@ -11,8 +11,8 @@ deferred. Read it with [`architecture.md`](architecture.md) (design) and
 ## Phase 1 — Control prototype
 
 The working light-control surface: a clinician controller drives a colored
-light on a headset client in realtime. This is the current focus, and the
-milestones mirror §5 of `architecture.md`.
+light on a headset client in realtime. The milestones mirror §5 of
+`architecture.md`.
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
@@ -104,7 +104,7 @@ hub method/event, no version change).
   ±1 nm on wavelength, flanking each slider and honoring the active channel lock.
 - ✅ **Echo-back delivery confirmation** — the client `AckState(ts)`s each
   rendered frame (throttled, latest-wins); the server relays it to the
-  controller as `StateRendered`, which shows **✓ Rendered on headset** plus the
+  controller as `StateRendered`, which shows **✓ Rendered on client** plus the
   round-trip latency. Confirms the message reached the headset, not just the
   controller's local preview.
 - ✅ **`KITT` scanning sweep** — an oscillating light. Additive optional `sweep`

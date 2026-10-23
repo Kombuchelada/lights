@@ -12,6 +12,7 @@ working light-control prototype.
 - `packages/protocol/` — shared TS types/limits; **mirrors the C# DTOs**.
 - `docs/architecture.md`, `docs/protocol.md`, `docs/roadmap.md` — design, wire contract, feature roadmap (read these).
 - `docs/deployment.md`, `docs/adr/` — Railway hosting runbook + architecture decision records.
+- Public repo, **all rights reserved** (`LICENSE`); `SECURITY.md` routes reports to private advisories.
 
 ## Run (dev)
 ```
@@ -38,6 +39,9 @@ Controller "Start session" → 6-char code → client joins by code or `?code=`.
   joined code is kept in `sessionStorage` (cleared on `onSessionEnded`) and replayed
   through the same auto-join path as a `?code=` URL. The join overlay also
   auto-shows when the controller or session drops (`onControllerLeft`/`onSessionEnded`).
+- **Controller icons** are inline SVG via `<app-icon name="…">` (`src/app/icon.ts`) —
+  add a path there; don't use emoji (they render inconsistently per platform).
+- **Node ≥ 22** (CI + Dockerfiles run Node 24; Node 20 is EOL).
 - `pkill -f "Lumessa.Api"` self-matches the shell if the pattern is in the script — kill by port (`fuser -k 5000/tcp`) instead.
 
 ## Conventions
