@@ -2,6 +2,7 @@
   "name": "@lumessa/protocol",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Shared wire-protocol types and constants for the Lumessa light-control system. Hand-kept in sync with the C# DTOs in server/Lumessa.Core.",
   "type": "module",
   "main": "dist/index.js",
@@ -13,7 +14,10 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rm -rf dist"

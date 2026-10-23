@@ -2,6 +2,7 @@
   "name": "lumessa",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "Realtime light-control for a phone-in-a-headset stimulus, with a modern accessible web controller.",
   "scripts": {
     "protocol:build": "npm --prefix packages/protocol run build",
@@ -11,7 +12,7 @@
     "management:build": "npm --prefix apps/management run build"
   },
   "engines": {
-    "node": ">=20",
+    "node": ">=22",
     "npm": ">=10"
   }
 }

@@ -1,0 +1,29 @@
+# Monthly, grouped dependency updates — one PR per ecosystem/directory, so
+# routine bumps don't drown out real work. Majors arrive in their own PRs.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: [/apps/management, /apps/client, /packages/protocol]
+    schedule:
+      interval: monthly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: nuget
+    directory: /server
+    schedule:
+      interval: monthly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: docker
+    directories: [/server, /apps/management, /apps/client]
+    schedule:
+      interval: monthly

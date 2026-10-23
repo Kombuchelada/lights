@@ -1,6 +1,6 @@
 {
-  "name": "management",
-  "version": "0.0.0",
+  "name": "@lumessa/management",
+  "version": "0.1.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -11,6 +11,7 @@
     "lint:css:fix": "stylelint \"src/**/*.scss\" --fix"
   },
   "private": true,
+  "license": "UNLICENSED",
   "packageManager": "npm@10.9.7",
   "dependencies": {
     "@angular/common": "^21.2.0",

@@ -6,7 +6,7 @@
 # Build context is the repo root (set RAILWAY_DOCKERFILE_PATH=apps/client/Dockerfile
 # on the Railway service); the app depends on ../../packages/protocol.
 
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /repo
 COPY packages/protocol/ ./packages/protocol/
 COPY apps/client/ ./apps/client/

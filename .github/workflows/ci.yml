@@ -1,39 +1,67 @@
-name: ci
+name: CI
 
 # Quality gate. Railway deploys natively (it watches `main` and rebuilds each
 # service from its Dockerfile on push), so this workflow does NOT deploy — it
-# runs the server tests and front-end builds so failures are visible on every
-# push and PR. To make a green gate *block* deploys, switch Railway off
-# auto-deploy and add a Railway-CLI deploy job here (see docs/deployment.md).
+# runs the tests and builds so failures are visible on every push and PR. To make
+# a green gate *block* deploys, switch Railway off auto-deploy and add a
+# Railway-CLI deploy job here (see docs/deployment.md).
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test-server:
+  server:
+    name: Server (build + test)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - run: dotnet test server/Lumessa.sln -c Release --nologo
 
-  build-frontends:
+  management:
+    name: Controller (lint + test + build)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/management
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: '20'
-      - name: Build client
-        working-directory: apps/client
-        run: npm ci && npm run build
-      - name: Build management
-        working-directory: apps/management
-        run: npm ci && npm run build
-      - name: Lint management CSS (design tokens)
-        working-directory: apps/management
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/management/package-lock.json
+      - run: npm ci
+      - name: Lint CSS (design tokens)
         run: npm run lint:css
+      - name: Unit tests
+        run: npm test -- --watch=false
+      - name: Build
+        run: npm run build
+
+  client:
+    name: Client (typecheck + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/client
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/client/package-lock.json
+      - run: npm ci
+      - run: npm run build
