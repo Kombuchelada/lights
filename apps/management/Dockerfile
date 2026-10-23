@@ -5,7 +5,7 @@
 # Build context is the repo root (set RAILWAY_DOCKERFILE_PATH=apps/management/Dockerfile
 # on the Railway service) because the app imports ../../packages/protocol.
 
-FROM node:24-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /repo
 # Protocol source first — it's resolved via the tsconfig path alias.
 COPY packages/protocol/ ./packages/protocol/
